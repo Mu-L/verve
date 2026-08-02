@@ -3,17 +3,17 @@
 //! toggle / update / export / language pickers, and the per-view bars
 //! (JSON).
 
-use gpui::{img, *};
-use gpui::prelude::FluentBuilder as _;
-use gpui_component::{ActiveTheme, Icon, IconName, Sizable as _, Selectable as _, Disableable as _,
-    button::{Button, ButtonVariants as _}, h_flex, v_flex, popover::Popover, WindowExt};
-use crate::assets::{BRACES, BRACES_JSON, DOCS, EXPORT,
-    HISTORY, IMPORT, REFRESH_CW, SAVE,
-    SAVE_AS, SERVER, SHARE};
-use crate::share::models::ShareScope;
-use crate::state::{AppEvent, AppState};
 use super::widgets::{menu_item, menu_separator, vicon};
 use super::{PendingDialog, SideView, VerveApp};
+use crate::assets::{BRACES, BRACES_JSON, DOCS, EXPORT,
+                    HISTORY, IMPORT, REFRESH_CW, SAVE,
+                    SAVE_AS, SERVER, SHARE};
+use crate::share::models::ShareScope;
+use crate::state::{AppEvent, AppState};
+use gpui::prelude::FluentBuilder as _;
+use gpui::{img, *};
+use gpui_component::{ActiveTheme, Disableable as _, Icon, IconName, Selectable as _, Sizable as _, WindowExt,
+                     button::{Button, ButtonVariants as _}, h_flex, popover::Popover, v_flex};
 
 impl VerveApp {
     pub(super) fn render_title_bar(&mut self, cx: &mut Context<Self>) -> gpui::AnyElement {
@@ -745,9 +745,7 @@ impl VerveApp {
     /// and the primary "new host" action — plus the app-level update/language
     /// controls. Height, padding, and the leading rail toggle match
     /// `render_api_title_bar` exactly, so nothing shifts on view switch.
-
     /// cmd-o — open a Markdown file in the markdown editor view.
-
     pub(super) fn render_json_title_bar(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.theme().clone();
 

@@ -3,14 +3,10 @@
 //! size persistence. These are used across several title-bar and
 //! toolbar rendering methods.
 
-use gpui::{img, *};
 use gpui::prelude::FluentBuilder as _;
-use gpui_component::{ActiveTheme, Icon, IconName, Sizable as _, WindowExt as _, button::{Button, ButtonVariants as _}, h_flex, v_flex};
-use crate::assets::{EXPORT, SAVE, SAVE_AS};
-use crate::share::models::ShareConfig;
-use crate::state::persistence;
+use gpui::{img, *};
 use gpui_component::resizable::ResizableState;
-use super::SideView;
+use gpui_component::{ActiveTheme, Icon, IconName, Sizable as _, WindowExt as _, button::{Button, ButtonVariants as _}, h_flex, v_flex};
 
 /// Build an icon from a Verve-custom Lucide SVG path.
 pub(super) fn vicon(path: &'static str) -> Icon {
@@ -216,7 +212,6 @@ pub(super) fn dropdown_panel(
 }
 
 /// Show the "share created" result dialog with the given URL. Used by both
-
 pub(super) fn show_share_result_dialog(
     window: &mut Window,
     cx: &mut App,

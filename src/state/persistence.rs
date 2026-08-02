@@ -559,7 +559,6 @@ pub fn save_hidden_rails(hidden: &std::collections::HashSet<String>) {
 }
 
 /// Load the configured after-send autosave mode for response examples.
-
 /// Load the custom order of activity-rail views (SideView names).
 /// Returns None when no custom order is set (caller should use default order).
 pub fn load_rail_order() -> Option<Vec<String>> {
