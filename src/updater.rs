@@ -19,7 +19,7 @@
 //! ```json
 //! {
 //!   "version": "0.2.0",
-//!   "url": "https://github.com/lijingrs/verve/releases/tag/v0.2.0",
+//!   "url": "https://github.com/aios-rs/verve/releases/tag/v0.2.0",
 //!   "notes": "...",
 //!   "platforms": {
 //!     "macos":   { "url": "...Verve-0.2.0.dmg" },

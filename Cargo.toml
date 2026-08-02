@@ -7,7 +7,7 @@ publish = false
 authors = ["Verve"]
 # Community Edition is open-sourced under the GNU AGPL v3.0.
 license = "AGPL-3.0"
-homepage = "https://github.com/lijingrs/verve"
+homepage = "https://github.com/aios-rs/verve"
 
 # macOS app bundle metadata (used by cargo-bundle).
 [package.metadata.bundle]
