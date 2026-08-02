@@ -1,11 +1,12 @@
 [package]
 name = "verve"
-version = "0.1.0"
-edition = "2021"
-description = "Verve — an offline-first API co-development platform built with gpui-component."
+version = "0.3.0"
+edition = "2024"
+description = "Verve — an offline-first, one-stop developer workbench built with Rust."
 publish = false
 authors = ["Verve"]
-license = "MIT"
+# Community Edition is open-sourced under the GNU AGPL v3.0.
+license = "AGPL-3.0"
 homepage = "https://github.com/lijingrs/verve"
 
 # macOS app bundle metadata (used by cargo-bundle).
@@ -13,15 +14,15 @@ homepage = "https://github.com/lijingrs/verve"
 name = "Verve"
 identifier = "com.verve.app"
 icon = ["assets/icons/verve.icns"]
-version = "0.1.0"
+version = "0.3.0"
 resources = []
 copyright = "Copyright (c) 2026 Verve. All rights reserved."
 category = "Developer Tool"
-short_description = "API co-development platform"
+short_description = "One-stop developer workbench"
 long_description = """
-Verve is an offline-first API co-development platform with HTTP debugging,
-SSH terminal, document sharing, and git sync — built with Rust + GPUI.
-"""
+Verve is an offline-first developer workbench built with Rust — unifying API
+debugging, mock & capture, document sharing, hosts, and JSON tools in a single
+native window."""
 
 # macOS bundle settings
 [package.metadata.bundle.osx]
@@ -36,27 +37,27 @@ style = "dark"
 name = "verve"
 maintainer = "Verve"
 copyright = "2026, Verve"
-depends = ["libssl3 | libssl1.1"]
+depends = ["libssl3 | libssl1.1", "libc6 (>= 2.31)"]
 section = "devel"
 priority = "optional"
 assets = [
-    ["target/release/verve", "usr/bin/", "755"],
+    ["target/release/verve", "usr/lib/verve/", "755"],
     ["assets/icons/verve.png", "usr/share/icons/hicolor/512x512/apps/verve.png", "644"],
     ["assets/verve.desktop", "usr/share/applications/verve.desktop", "644"],
 ]
+extended-description = """
+Verve is an offline-first developer workbench built with Rust — unifying API
+debugging, mock & capture, document sharing, hosts, and JSON tools in a single
+native window."""
+
 
 # Windows installer metadata (cargo-wix / cargo-bundle)
 [package.metadata.wix]
 name = "Verve"
 manufacturer = "Verve"
 upgrade-guid = "12345678-1234-1234-1234-123456789012"
-license = "MIT"
+license = "LICENSE"
 icon = "assets/icons/verve.ico"
-
-# Standalone document-sharing server binary for cloud/headless deployment.
-[[bin]]
-name = "verve-server"
-path = "src/bin/verve_server.rs"
 
 [dependencies]
 gpui = { git = "https://github.com/zed-industries/zed", rev = "1d217ee39d381ac101b7cf49d3d22451ac1093fe" }
@@ -88,8 +89,11 @@ log = "0.4"
 env_logger = "0.11"
 # QR code generation for the document-sharing "二维码" share method (pure Rust).
 qrcode = "0.14"
+regex = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+serde_yaml = "0.9"
 smol = "2"
 uuid = { version = "1", features = ["v4"] }
 chrono = { version = "0.4", default-features = false, features = ["serde", "clock"] }
@@ -99,7 +103,7 @@ rust-i18n-support = "=4.0.0"
 
 # WebSocket (real) + a dedicated tokio runtime for it.
 tokio-tungstenite = { version = "0.23", features = ["rustls-tls-webpki-roots"] }
-tokio = { version = "1", features = ["rt", "rt-multi-thread", "net", "sync", "macros"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "net", "sync", "macros", "process"] }
 futures-util = "0.3"
 
 # Pure-Rust git (gitoxide). Local ops + blocking network client (HTTPS via
@@ -114,27 +118,27 @@ gix = { version = "0.69", default-features = false, features = [
     "credentials",
 ] }
 
-# SSH client: russh (pure-Rust, no C deps) + terminal model + secure storage.
-russh = "0.60"
-alacritty_terminal = "0.24"
-aes-gcm = "0.10"
-argon2 = "0.5"
-zeroize = "1"
-secrecy = "0.8"
-bincode = "1"
 # Semantic version comparison for the auto-update check.
 semver = "1"
-
-[target.'cfg(target_os = "macos")'.dependencies]
-keyring = { version = "3", features = ["apple-native"] }
-
-[target.'cfg(target_os = "windows")'.dependencies]
-keyring = { version = "3", features = ["windows-native"] }
-
-[target.'cfg(target_os = "linux")'.dependencies]
-keyring = { version = "3", features = ["sync-secret-service"] }
+# Embed Verve-specific Lucide SVG icons at compile time (composite AssetSource).
+rust-embed = "8.7"
 
 [lints.clippy]
 dbg_macro = "deny"
 style = { level = "allow", priority = -1 }
 module_inception = "allow"
+# GPUI element-builder closures produce complex types; the project already
+# allows the entire `style` group. These additional allows cover the remaining
+# noisy lints that conflict with the GPUI/GPUI-component patterns.
+type_complexity = "allow"
+too_many_arguments = "allow"
+result_large_err = "allow"
+
+# rustc dead-code lints: the project has many roadmap features that produce
+# unused-function/field warnings until wired up. Allow at the workspace level.
+[lints.rust]
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+
+[dev-dependencies]

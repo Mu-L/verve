@@ -1,8 +1,10 @@
 [Desktop Entry]
 Name=Verve
-Comment=API co-development platform
-Exec=verve
+Comment=API co-development platform with HTTP debugging, mock & capture, document sharing
+Exec=verve %F
 Icon=verve
-Type=Application
-Categories=Development;IDE;
 Terminal=false
+Type=Application
+Categories=Development;Network;
+StartupNotify=true
+MimeType=text/plain;text/html;application/json;

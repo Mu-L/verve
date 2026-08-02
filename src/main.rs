@@ -1,9 +1,4 @@
 //! Verve — an offline-first API co-development platform built with gpui-component.
-//!
-//! Scope of this build: the **core HTTP debugging client** (PRD §4, §5.1–5.5)
-//! with local JSON-file persistence. Features requiring a backend (team
-//! collaboration, cloud sync, AI, DB tools, WebSocket/gRPC) are documented as
-//! roadmap items and intentionally stubbed.
 
 // Roadmap features and helpers produce dead-code warnings until wired up.
 #![allow(dead_code)]
@@ -12,109 +7,128 @@
 // Some serde data structs are fine to derive-impl via macros.
 #![allow(clippy::derivable_impls)]
 
-use gpui::*;
-use gpui_component::{button::*, *};
-use gpui_component_assets::Assets;
+use gpui::{img, *};
+use gpui_component::button::*;
+use gpui_component::*;
 
+use verve::assets::VerveAssets;
+use verve::state::persistence;
 use verve::ui::VerveApp;
 use verve::{mock, state, ui};
 
 fn main() {
-    // Initialise logging before anything else. Default to `info` so the git
-    // sync flow's step-by-step diagnostics print to the terminal; override
-    // with the standard RUST_LOG env var.
     if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "info");
+        unsafe {
+            std::env::set_var("RUST_LOG", "info");
+        };
     }
     let _ = env_logger::Builder::from_default_env()
         .format_timestamp_secs()
         .try_init();
 
-    // Apply the persisted UI locale (defaults to zh-CN).
-    if let Some(locale) = verve::state::persistence::load_layout()
-        .and_then(|l| l.locale)
-    {
-        rust_i18n::set_locale(&locale);
-    } else {
-        rust_i18n::set_locale("zh-CN");
-    }
-
-    let app = gpui_platform::application().with_assets(Assets);
+    let app = gpui_platform::application().with_assets(VerveAssets::new());
 
     app.run(move |cx| {
-        // This must be called before using any GPUI Component features.
         gpui_component::init(cx);
 
-        // Load all built-in themes (Catppuccin, Gruvbox, Tokyo Night, etc.).
         ui::themes::load_builtin_themes(cx);
-
-        // Default to the dark theme to match the Apipost reference design.
         gpui_component::Theme::change(gpui_component::ThemeMode::Dark, None, cx);
-
-        // Disable the framework's built-in active-highlight border overlay —
-        // its rounded border conflicts with the row's rounding and leaves a
-        // crescent gap. We render our own clean selection highlight instead.
         gpui_component::Theme::global_mut(cx).list.active_highlight = false;
 
-        // Register a reqwest-backed HTTP client so the app can make requests.
-        if let Ok(http_client) = reqwest_client::ReqwestClient::user_agent("verve/0.1.0") {
+        if let Ok(http_client) =
+            reqwest_client::ReqwestClient::user_agent(concat!("verve/", env!("CARGO_PKG_VERSION")))
+        {
             cx.set_http_client(std::sync::Arc::new(http_client));
         }
 
-        // Load persistent workspace state.
-        let app_state = state::AppState::init(cx);
-
-        // Start the local Mock server with the active project's rules, if any.
-        if let Some(project) = app_state.read(cx).active_project() {
-            let rules = std::sync::Arc::new(mock::rule_map(project));
-            if !rules.is_empty() {
-                mock::serve(mock::DEFAULT_PORT, rules).detach();
-            }
+        // Apply locale early.
+        if let Some(locale) = persistence::load_layout().and_then(|l| l.locale) {
+            rust_i18n::set_locale(&locale);
+        } else {
+            rust_i18n::set_locale("zh-CN");
         }
 
-        // Keybindings (PRD §6). macOS uses Cmd, others use Ctrl.
-        #[cfg(target_os = "macos")]
-        cx.bind_keys([
-            KeyBinding::new("cmd-enter", ui::request_panel::SendRequest, None),
-            KeyBinding::new("cmd-s", ui::app::SaveWorkspace, None),
-            KeyBinding::new("cmd-n", ui::app::NewRequest, None),
-        ]);
-        #[cfg(not(target_os = "macos"))]
-        cx.bind_keys([
-            KeyBinding::new("ctrl-enter", ui::request_panel::SendRequest, None),
-            KeyBinding::new("ctrl-s", ui::app::SaveWorkspace, None),
-            KeyBinding::new("ctrl-n", ui::app::NewRequest, None),
-        ]);
+        // Decide whether to show bootstrap or main app.
+        let is_first_run = persistence::is_first_run();
 
-        // Centered, reasonable default size. Computed here (pre-spawn) where cx
-        // is a &mut App; Bounds::centered needs a synchronous App reference.
-        let bounds = Bounds::centered(None, size(px(1400.), px(900.)), cx);
+        if is_first_run {
+            log::info!("First run detected, showing bootstrap dialog");
+            let bounds = Bounds::centered(None, size(px(560.), px(560.)), cx);
+            cx.spawn(async move |cx| {
+                cx.open_window(
+                    WindowOptions {
+                        titlebar: Some(gpui::TitlebarOptions {
+                            title: Some("Verve - Welcome".into()),
+                            appears_transparent: false,
+                            traffic_light_position: Some(point(px(14.), px(16.))),
+                        }),
+                        window_bounds: Some(WindowBounds::Windowed(bounds)),
+                        window_min_size: Some(size(px(400.), px(400.))),
+                        ..Default::default()
+                    },
+                    |window, cx| {
+                        let dialog = ui::bootstrap_dialog::BootstrapDialog::new(window, cx);
+                        cx.new(|cx| Root::new(dialog, window, cx))
+                    },
+                )
+                .expect("Failed to open bootstrap window");
+            })
+            .detach();
 
-        cx.spawn(async move |cx| {
-            cx.open_window(
-                WindowOptions {
-                    // Hide the native titlebar so our custom top bar is flush
-                    // with the top edge (no gap). On macOS the traffic-light
-                    // buttons overlay onto our bar.
-                    titlebar: Some(gpui::TitlebarOptions {
-                        title: Some("Verve".into()),
-                        appears_transparent: true,
-                        traffic_light_position: Some(point(px(14.), px(16.))),
-                    }),
-                    window_bounds: Some(WindowBounds::Windowed(bounds)),
-                    window_min_size: Some(size(px(960.), px(600.))),
-                    ..Default::default()
-                },
-                |window, cx| {
-                    let view = cx.new(|cx| VerveApp::new(window, cx));
-                    cx.new(|cx| Root::new(view, window, cx).bg(cx.theme().background))
-                },
-            )
-            .expect("Failed to open window");
-        })
-        .detach();
+            persistence::mark_bootstrap_done();
+        }
+
+        launch_main_app(cx);
     });
 
-    // Silence unused import warnings for the placeholder below.
     let _ = Button::new("noop");
+}
+
+fn launch_main_app(cx: &mut App) {
+    let app_state = state::AppState::init(cx);
+
+    #[cfg(target_os = "macos")]
+    cx.bind_keys([
+        KeyBinding::new("cmd-enter", ui::request_panel::SendRequest, None),
+        KeyBinding::new("cmd-s", ui::app::SaveWorkspace, None),
+        // New API request moved off cmd-n; use cmd-shift-n.
+        KeyBinding::new("cmd-shift-n", ui::app::NewRequest, None),
+    ]);
+    #[cfg(not(target_os = "macos"))]
+    cx.bind_keys([
+        KeyBinding::new("ctrl-enter", ui::request_panel::SendRequest, None),
+        KeyBinding::new("ctrl-s", ui::app::SaveWorkspace, None),
+        KeyBinding::new("ctrl-shift-n", ui::app::NewRequest, None),
+    ]);
+
+    let bounds = Bounds::centered(None, size(px(1400.), px(900.)), cx);
+
+    cx.spawn(async move |cx| {
+        cx.open_window(
+            WindowOptions {
+                titlebar: Some(gpui::TitlebarOptions {
+                    title: Some("Verve".into()),
+                    appears_transparent: true,
+                    traffic_light_position: Some(point(px(14.), px(16.))),
+                }),
+                window_bounds: Some(WindowBounds::Windowed(bounds)),
+                window_min_size: Some(size(px(960.), px(600.))),
+                ..Default::default()
+            },
+            |window, cx| {
+                // The window close button (and the doc-level close) should hide
+                // the window rather than quit the app, so the process — and any
+                // in-memory state — stays alive until the user explicitly quits.
+                // Returning `false` cancels the close; `minimize_window` hides it.
+                window.on_window_should_close(cx, |window, _cx| {
+                    window.minimize_window();
+                    false
+                });
+                let view = cx.new(|cx| VerveApp::new(window, cx));
+                cx.new(|cx| Root::new(view, window, cx).bg(cx.theme().background))
+            },
+        )
+        .expect("Failed to open window");
+    })
+    .detach();
 }

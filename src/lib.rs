@@ -1,13 +1,22 @@
-//! Verve — an offline-first API co-development platform built with gpui-component.
-//!
-//! This is the core library that provides the main functionality for the Verve application.
+//! Verve library crate — exposes modules for integration tests.
 
-// Roadmap features and helpers produce dead-code warnings until wired up.
-#![allow(dead_code)]
-// The GPUI element-builder style produces some complex closures.
-#![allow(clippy::type_complexity)]
-// Some serde data structs are fine to derive-impl via macros.
-#![allow(clippy::derivable_impls)]
+// Load locale files from `locales/` at compile time. Default locale is zh-CN
+// (simplified Chinese); English is available as "en". Switch at runtime via
+// `rust_i18n::set_locale("en")`.
+rust_i18n::i18n!("locales", fallback = "zh-CN");
 
+pub mod assets;
+pub mod export;
+pub mod git;
+pub mod hosts;
+pub mod hosts_priv;
+pub mod hosts_profiles;
+pub mod http;
+pub mod import;
+pub mod mock;
+pub mod proxy;
+pub mod scripting;
+pub mod share;
 pub mod state;
 pub mod ui;
+pub mod updater;
