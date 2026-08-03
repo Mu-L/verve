@@ -86,6 +86,26 @@
                              verve.exe). The Verb Argument='"%1"' makes the
                              shell pass the file path as argv[1]. -->
                         <Component Id='FileAssociations' Guid='a84894b0-c8f2-4e40-9631-f10cb8b06c2a'>
+                            <!-- This single registry value is the component's
+                                 KeyPath (the component owns no File). The path
+                                 HKCR\Applications\verve.exe does NOT collide
+                                 with the .ext\OpenWithProgids rows that the
+                                 <Extension> elements below auto-generate —
+                                 duplicating those here caused LGHT0130. -->
+                            <RegistryValue
+                                Root='HKCR'
+                                Key='Applications\verve.exe\shell\open\command'
+                                Value='"[Bin]verve.exe" "%1"'
+                                Type='string'
+                                KeyPath='yes'/>
+
+                            <!-- Each <Extension> registers the .ext → ProgId
+                                 association (including the OpenWithProgids
+                                 binding) and the open verb that passes the
+                                 file path to verve.exe as argv[1]. Do NOT add
+                                 explicit <RegistryValue> rows for .ext here —
+                                 <Extension> already creates them and a second
+                                 copy makes light fail (LGHT0130). -->
                             <ProgId Id='Verve.Markdown' Description='Markdown Document'>
                                 <Extension Id='md' ContentType='text/markdown'>
                                     <Verb Id='open' Command='Open with verve' TargetFile='exe0' Argument='"%1"'/>
@@ -115,20 +135,6 @@
                                     <Verb Id='open' Command='Open with verve' TargetFile='exe0' Argument='"%1"'/>
                                 </Extension>
                             </ProgId>
-
-                            <!-- Bind each extension's HKCR\.ext to our ProgId
-                                 so the association survives another app
-                                 claiming the extension. A key under HKCR makes
-                                 the component KeyPath'd without a File. -->
-                            <RegistryValue Root='HKCR' Key='.md\OpenWithProgids' Name='Verve.Markdown' Value='' Type='string' KeyPath='yes'/>
-                            <RegistryValue Root='HKCR' Key='.markdown\OpenWithProgids' Name='Verve.Markdown' Value='' Type='string'/>
-                            <RegistryValue Root='HKCR' Key='.mdown\OpenWithProgids' Name='Verve.Markdown' Value='' Type='string'/>
-                            <RegistryValue Root='HKCR' Key='.mkd\OpenWithProgids' Name='Verve.Markdown' Value='' Type='string'/>
-                            <RegistryValue Root='HKCR' Key='.mkdn\OpenWithProgids' Name='Verve.Markdown' Value='' Type='string'/>
-                            <RegistryValue Root='HKCR' Key='.txt\OpenWithProgids' Name='Verve.Markdown' Value='' Type='string'/>
-                            <RegistryValue Root='HKCR' Key='.mdx\OpenWithProgids' Name='Verve.Markdown' Value='' Type='string'/>
-                            <RegistryValue Root='HKCR' Key='.html\OpenWithProgids' Name='Verve.Markdown' Value='' Type='string'/>
-                            <RegistryValue Root='HKCR' Key='.htm\OpenWithProgids' Name='Verve.Markdown' Value='' Type='string'/>
                         </Component>
                     </Directory>
                 </Directory>
