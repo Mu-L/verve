@@ -86,55 +86,62 @@
                              verve.exe). The Verb Argument='"%1"' makes the
                              shell pass the file path as argv[1]. -->
                         <Component Id='FileAssociations' Guid='a84894b0-c8f2-4e40-9631-f10cb8b06c2a'>
-                            <!-- This single registry value is the component's
-                                 KeyPath (the component owns no File). The path
-                                 HKCR\Applications\verve.exe does NOT collide
-                                 with the .ext\OpenWithProgids rows that the
-                                 <Extension> elements below auto-generate —
-                                 duplicating those here caused LGHT0130. -->
+                            <!-- File associations for Verve: double-clicking a
+                                 .md/.markdown/.mdown/.mkd/.mkdn/.txt/.mdx/.html
+                                 /.htm file passes its path to verve.exe as
+                                 argv[1] (src/main.rs opens it in the Markdown
+                                 editor).
+
+                                 Authored as raw <RegistryValue> rows instead
+                                 of <ProgId><Extension><Verb>. With multiple
+                                 extensions sharing one ProgId, the declarative
+                                 elements emit an identical
+                                 HKCR\Verve.Markdown\shell\open\command row per
+                                 extension → light fails with LGHT0130 (duplicate
+                                 primary key). Writing the rows by hand lets us
+                                 author shell\open\command exactly once.
+
+                                 Layout:
+                                   HKCR\.ext                 -> Progid = Verve.Markdown
+                                   HKCR\.ext\OpenWithProgids -> Verve.Markdown (shows Verve in "Open with")
+                                   HKCR\Verve.Markdown\shell\open\command -> '"[Bin]verve.exe" "%1"' (ONCE) -->
+
+                            <!-- One KeyPath row (component owns no File). -->
                             <RegistryValue
+                                Id='reg_Cmd'
                                 Root='HKCR'
-                                Key='Applications\verve.exe\shell\open\command'
+                                Key='Verve.Markdown\shell\open\command'
                                 Value='"[Bin]verve.exe" "%1"'
                                 Type='string'
                                 KeyPath='yes'/>
 
-                            <!-- Each <Extension> registers the .ext → ProgId
-                                 association (including the OpenWithProgids
-                                 binding) and the open verb that passes the
-                                 file path to verve.exe as argv[1]. Do NOT add
-                                 explicit <RegistryValue> rows for .ext here —
-                                 <Extension> already creates them and a second
-                                 copy makes light fail (LGHT0130). -->
-                            <ProgId Id='Verve.Markdown' Description='Markdown Document'>
-                                <Extension Id='md' ContentType='text/markdown'>
-                                    <Verb Id='open' Command='Open with verve' TargetFile='exe0' Argument='"%1"'/>
-                                </Extension>
-                                <Extension Id='markdown' ContentType='text/markdown'>
-                                    <Verb Id='open' Command='Open with verve' TargetFile='exe0' Argument='"%1"'/>
-                                </Extension>
-                                <Extension Id='mdown' ContentType='text/markdown'>
-                                    <Verb Id='open' Command='Open with verve' TargetFile='exe0' Argument='"%1"'/>
-                                </Extension>
-                                <Extension Id='mkd' ContentType='text/markdown'>
-                                    <Verb Id='open' Command='Open with verve' TargetFile='exe0' Argument='"%1"'/>
-                                </Extension>
-                                <Extension Id='mkdn' ContentType='text/markdown'>
-                                    <Verb Id='open' Command='Open with verve' TargetFile='exe0' Argument='"%1"'/>
-                                </Extension>
-                                <Extension Id='txt' ContentType='text/plain'>
-                                    <Verb Id='open' Command='Open with verve' TargetFile='exe0' Argument='"%1"'/>
-                                </Extension>
-                                <Extension Id='mdx' ContentType='text/markdown'>
-                                    <Verb Id='open' Command='Open with verve' TargetFile='exe0' Argument='"%1"'/>
-                                </Extension>
-                                <Extension Id='html' ContentType='text/html'>
-                                    <Verb Id='open' Command='Open with verve' TargetFile='exe0' Argument='"%1"'/>
-                                </Extension>
-                                <Extension Id='htm' ContentType='text/html'>
-                                    <Verb Id='open' Command='Open with verve' TargetFile='exe0' Argument='"%1"'/>
-                                </Extension>
-                            </ProgId>
+                            <!-- .md -->
+                            <RegistryValue Id='reg_md_Progid'    Root='HKCR' Key='.md'                    Name='Progid'         Value='Verve.Markdown' Type='string'/>
+                            <RegistryValue Id='reg_md_OpenWith'  Root='HKCR' Key='.md\OpenWithProgids'      Name='Verve.Markdown' Value=''               Type='string'/>
+                            <!-- .markdown -->
+                            <RegistryValue Id='reg_markdown_Progid'   Root='HKCR' Key='.markdown'              Name='Progid'         Value='Verve.Markdown' Type='string'/>
+                            <RegistryValue Id='reg_markdown_OpenWith' Root='HKCR' Key='.markdown\OpenWithProgids' Name='Verve.Markdown' Value=''           Type='string'/>
+                            <!-- .mdown -->
+                            <RegistryValue Id='reg_mdown_Progid'   Root='HKCR' Key='.mdown'              Name='Progid'         Value='Verve.Markdown' Type='string'/>
+                            <RegistryValue Id='reg_mdown_OpenWith' Root='HKCR' Key='.mdown\OpenWithProgids' Name='Verve.Markdown' Value=''               Type='string'/>
+                            <!-- .mkd -->
+                            <RegistryValue Id='reg_mkd_Progid'   Root='HKCR' Key='.mkd'              Name='Progid'         Value='Verve.Markdown' Type='string'/>
+                            <RegistryValue Id='reg_mkd_OpenWith' Root='HKCR' Key='.mkd\OpenWithProgids' Name='Verve.Markdown' Value=''               Type='string'/>
+                            <!-- .mkdn -->
+                            <RegistryValue Id='reg_mkdn_Progid'   Root='HKCR' Key='.mkdn'              Name='Progid'         Value='Verve.Markdown' Type='string'/>
+                            <RegistryValue Id='reg_mkdn_OpenWith' Root='HKCR' Key='.mkdn\OpenWithProgids' Name='Verve.Markdown' Value=''               Type='string'/>
+                            <!-- .txt -->
+                            <RegistryValue Id='reg_txt_Progid'   Root='HKCR' Key='.txt'              Name='Progid'         Value='Verve.Markdown' Type='string'/>
+                            <RegistryValue Id='reg_txt_OpenWith' Root='HKCR' Key='.txt\OpenWithProgids' Name='Verve.Markdown' Value=''               Type='string'/>
+                            <!-- .mdx -->
+                            <RegistryValue Id='reg_mdx_Progid'   Root='HKCR' Key='.mdx'              Name='Progid'         Value='Verve.Markdown' Type='string'/>
+                            <RegistryValue Id='reg_mdx_OpenWith' Root='HKCR' Key='.mdx\OpenWithProgids' Name='Verve.Markdown' Value=''               Type='string'/>
+                            <!-- .html -->
+                            <RegistryValue Id='reg_html_Progid'   Root='HKCR' Key='.html'              Name='Progid'         Value='Verve.Markdown' Type='string'/>
+                            <RegistryValue Id='reg_html_OpenWith' Root='HKCR' Key='.html\OpenWithProgids' Name='Verve.Markdown' Value=''               Type='string'/>
+                            <!-- .htm -->
+                            <RegistryValue Id='reg_htm_Progid'   Root='HKCR' Key='.htm'              Name='Progid'         Value='Verve.Markdown' Type='string'/>
+                            <RegistryValue Id='reg_htm_OpenWith' Root='HKCR' Key='.htm\OpenWithProgids' Name='Verve.Markdown' Value=''               Type='string'/>
                         </Component>
                     </Directory>
                 </Directory>
