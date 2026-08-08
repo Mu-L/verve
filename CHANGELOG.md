@@ -2,6 +2,30 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.5.0] - 2026-08-08
+
+### 🔧 Enhancements (synced from upstream)
+
+- **Per-request base URL override (tri-state)** — each request can now choose to
+  inherit the folder's base URL, explicitly disable any prefix, or set a custom
+  one (supports `{{var}}` placeholders). The dropdown shows the effective URL and
+  the "不使用前置 URL" state is persisted per request.
+- **Global parameters / headers / cookies** — project-level global
+  params/headers/cookies are now auto-applied to every request, with a same-named
+  per-request entry overriding the global one (matching the global-manager UI
+  copy "接口级同名头覆盖"). Matching is case-insensitive for HTTP headers.
+- **Method-colored Send button & refined tab bar** — the Send button and method
+  chip now use a custom variant tinted by the HTTP method color, and the request
+  tabs use an Apifox/Postman-style active underline.
+- i18n: added the `export_failed` message (en + zh-CN).
+
+### 📦 Other
+
+- Non-code resources (locales) synced from upstream.
+- Pro-only modules (SSH / Docker / Kubernetes / stress testing / WYSIWYG notes /
+  PDF / relocate / autotest / cloud sharing / `verve-server`) remain exclusive to
+  the Pro Edition and are not part of the Community Edition.
+
 ## [0.3.0] - 2026-08-02
 
 ### 🎉 Major Release — Rust + GPUI Rewrite

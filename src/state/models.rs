@@ -460,6 +460,44 @@ fn default_true() -> bool {
     true
 }
 
+/// Merge project-global `KeyValue` rows with per-request rows, so that global
+/// params/headers/cookies are auto-applied to every request while a same-named
+/// per-request entry overrides the global one (matching the global-manager UI
+/// copy: "接口级同名头覆盖").
+///
+/// Matching is case-insensitive on the trimmed key (correct for HTTP headers,
+/// harmless for query params/cookies). Disabled or empty rows are dropped.
+/// Global entries come first in the output, per-request entries after, so
+/// `prepare()`'s own "last write wins" header assembly keeps per-request wins.
+pub fn merge_kv(global: &[KeyValue], per_request: &[KeyValue]) -> Vec<KeyValue> {
+    // Collect the per-request keys (uppercased) that should override globals.
+    let overrides: Vec<String> = per_request
+        .iter()
+        .filter(|kv| kv.enabled && !kv.is_empty())
+        .map(|kv| kv.key.trim().to_ascii_uppercase())
+        .collect();
+
+    let mut out: Vec<KeyValue> = Vec::with_capacity(global.len() + per_request.len());
+    // Globals first, skipping any whose key is overridden per-request.
+    for kv in global {
+        if !kv.enabled || kv.is_empty() {
+            continue;
+        }
+        let key_upper = kv.key.trim().to_ascii_uppercase();
+        if overrides.contains(&key_upper) {
+            continue;
+        }
+        out.push(kv.clone());
+    }
+    // Per-request entries always included (when enabled + non-empty).
+    for kv in per_request {
+        if kv.enabled && !kv.is_empty() {
+            out.push(kv.clone());
+        }
+    }
+    out
+}
+
 /// A request body.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RequestBody {
@@ -734,6 +772,12 @@ pub struct ApiRequest {
     pub protocol: Protocol,
     #[serde(default)]
     pub url: String,
+    /// Per-request base-URL override mode (tri-state):
+    /// - `None`             : inherit the folder's `base_url` (default, backward-compatible).
+    /// - `Some(None)`       : explicitly disable any prefix for this request.
+    /// - `Some(Some(url))`  : use exactly this url (may contain `{{var}}` placeholders).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base_url_override: Option<Option<String>>,
     #[serde(default)]
     pub params: Vec<KeyValue>,
     #[serde(default)]
@@ -802,6 +846,7 @@ impl ApiRequest {
             method,
             protocol: Protocol::Http,
             url: url.into(),
+            base_url_override: None,
             params: Vec::new(),
             headers: Vec::new(),
             path: Vec::new(),

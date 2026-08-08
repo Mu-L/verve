@@ -13,7 +13,7 @@ use crate::http;
 use crate::state::models::*;
 use crate::state::{AppEvent, AppState};
 use crate::ui::kv_table::{self, KvRow};
-use super::folder_helpers::{resolve_folder_base_url, apply_autosave_example};
+use super::folder_helpers::{apply_autosave_example, resolve_effective_base_url};
 use super::{RequestPanel, ReqTab, FolderKvSection, FolderTab};
 use super::{register_stop, unregister_stop, stop_flags, truncate_history_body};
 
@@ -42,6 +42,15 @@ impl RequestPanel {
                 .flatten()
                 .cloned()
                 .collect();
+            // Merge project-global params/headers/cookies into the request's
+            // own rows (per-request overrides global) so globals actually take
+            // effect on the wire. The merge happens here on the clone, so every
+            // dispatch branch below (HTTP/SSE/gRPC/…) inherits it without each
+            // needing to know about project globals.
+            let mut merged = req.clone();
+            merged.params = crate::state::models::merge_kv(&project.global_params, &req.params);
+            merged.headers = crate::state::models::merge_kv(&project.global_headers, &req.headers);
+            merged.cookies = crate::state::models::merge_kv(&project.global_cookies, &req.cookies);
             // System variables: mock_server address
             let mut system = BTreeMap::new();
             system.insert(
@@ -58,33 +67,26 @@ impl RequestPanel {
                 &folder_vars,
                 &req.variables,
             );
-            // Inject folder base_url into vars so {{baseUrl}} and relative
-            // path resolution both work. The base_url value itself is a URL
-            // like "https://api.example.com" — it gets substituted into any
-            // {{baseUrl}} placeholder AND used for relative path prefixing.
-            // A per-request base_url override (selected from the dropdown)
-            // takes precedence over the folder's base_url.
+            // Inject the effective base URL into vars so {{baseUrl}} and
+            // relative-path resolution both work. Resolution is driven by the
+            // tri-state `req_base_mode` (inherit / explicit-disable /
+            // override); a returned None leaves both keys unset, so a relative
+            // URL with an explicitly-disabled prefix stays relative.
             let req_base_raw = self.req_base_url.read(cx).value().to_string();
-            if !req_base_raw.trim().is_empty() {
-                // Substitute any {{var}} placeholders in the per-request
-                // base_url against the current effective vars.
-                let resolved_req_base = crate::http::variable::substitute(&req_base_raw, &vars);
-                if !resolved_req_base.trim().is_empty() {
-                    vars.insert(
-                        "__folder_base_url__".to_string(),
-                        resolved_req_base.trim_end_matches('/').to_string(),
-                    );
-                    vars.entry("baseUrl".to_string())
-                        .or_insert(resolved_req_base);
-                }
-            } else if let Some(base) = resolve_folder_base_url(project, &chain) {
+            if let Some(base) = resolve_effective_base_url(
+                &self.req_base_mode,
+                &req_base_raw,
+                &vars,
+                project,
+                &chain,
+            ) {
                 vars.insert("__folder_base_url__".to_string(), base.clone());
                 vars.entry("baseUrl".to_string()).or_insert(base);
             }
             (
                 req.pre_script.clone(),
                 req.tests_script.clone(),
-                req.clone(),
+                merged,
                 vars,
             )
         };
