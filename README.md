@@ -41,7 +41,7 @@ Verve is built on **Rust + [GPUI](https://github.com/zed-industries/zed)** (the 
 
 <br/>
 
-[Features](#-features) · [Community vs Pro](#-community-vs-pro) · [Getting Started](#-getting-started) · [Pro Edition](#-pro-edition--sponsor-to-unlock)
+[Features](#-features) · [Community vs Pro](#-community-vs-pro) · [Pro Updates](#-pro-edition--recent-iterations) · [Getting Started](#-getting-started) · [Pro Edition](#-pro-edition--sponsor-to-unlock)
 
 </div>
 
@@ -465,6 +465,36 @@ The Pro Edition (pre-compiled binaries + continuous updates + priority support) 
 | `Cmd/Ctrl+N` | New request |
 | `Cmd/Ctrl+V` | Paste (in terminal) |
 | `Tab` | Auto-complete (in terminal) |
+
+---
+
+## 🆕 Pro Edition — Recent Iterations
+
+The Pro Edition ships new work almost every day. This section is a transparent log of recent Pro-side iterations, so the community can see exactly what's being built on top of the free Community Edition. (Community Edition users get the full daily API workflow for free; these land in the Pro build.)
+
+> Last updated: 2026-08
+
+### 🔐 SSH Terminal
+
+- **MFA / 2FA authentication** — new `keyboard-interactive` auth type for TOTP / OTP / hardware-key servers. The verification code is prompted dynamically at connect time, and "password + OTP" pairing is supported (account password first, then the OTP).
+- **Duplicate session** — clone an SSH session into a fresh, independent tab (own socket & session id). It reuses the already-authenticated connection, so an MFA-protected host won't ask for a second OTP.
+- **Double-click word selection** in the terminal.
+- **Scrollback buffer**, clear-history purge, and monospace fill for the terminal.
+- **Smarter connection errors** — failures are classified (auth / network / timeout) with a hint to grant macOS local-network permission when needed.
+
+### 🗒️ Markdown Notes & PDF
+
+- **PDF export overhaul** — switched to a new PDF export engine.
+- **Markdown rendering** — multiple rounds of rendering refinements.
+
+### 🖥️ Server Triage
+
+- **Docker panel** optimization.
+- **Kubernetes panel** optimization.
+
+### 🧪 API & Testing (shared foundation)
+
+- **Global parameters** — project-level params / headers / cookies auto-applied to every request; a same-named per-request entry overrides the global one (case-insensitive). Shared by HTTP send, stress testing, and the automated-test runner.
 
 ---
 
