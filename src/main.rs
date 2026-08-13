@@ -93,12 +93,15 @@ fn launch_main_app(cx: &mut App) {
         KeyBinding::new("cmd-s", ui::app::SaveWorkspace, None),
         // New API request moved off cmd-n; use cmd-shift-n.
         KeyBinding::new("cmd-shift-n", ui::app::NewRequest, None),
+        // Close the active request tab (cmd-w).
+        KeyBinding::new("cmd-w", ui::app::CloseFile, None),
     ]);
     #[cfg(not(target_os = "macos"))]
     cx.bind_keys([
         KeyBinding::new("ctrl-enter", ui::request_panel::SendRequest, None),
         KeyBinding::new("ctrl-s", ui::app::SaveWorkspace, None),
         KeyBinding::new("ctrl-shift-n", ui::app::NewRequest, None),
+        KeyBinding::new("ctrl-w", ui::app::CloseFile, None),
     ]);
 
     let bounds = Bounds::centered(None, size(px(1400.), px(900.)), cx);

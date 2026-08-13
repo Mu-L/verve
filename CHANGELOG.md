@@ -2,6 +2,45 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.5.3] - 2026-08-13
+
+### 🔧 Enhancements (synced from upstream)
+
+- **Postman-style dynamic variables** — `{{$random}}`, `{{$uuid}}`,
+  `{{$timestamp}}`, and the new `{{$sparkid}}` (21-char Base58, time-sortable)
+  are expanded to a fresh value on every send; a user-defined variable of the
+  same name still wins.
+- **Clear response on send** — clicking Send immediately clears the previous
+  response and shows a "请求中…" (requesting) state in the realtime panel until
+  the reply arrives, so stale content is never mistaken for the live result.
+- **Smarter request search** — the project tree search now matches request
+  URLs/paths, not just names.
+- **"Move to" picker** — move a request or folder into another folder via a
+  searchable destination picker (in addition to drag-and-drop).
+- **Tab overflow dropdown** — when too many request tabs are open, a `»`
+  dropdown lists the overflow; `cmd-w` / `ctrl-w` closes the active tab.
+- **Environment manager** — the window now fills its container, has an
+  overflow-scroll, and confirms before deleting a non-empty row.
+- **KV table** — value cells expand on focus when content overflows, with
+  configurable value width / description flex / enabled-toggle.
+- **Per-request base URL precedence fix** — an explicit override
+  (disable/custom) now always takes precedence over host-based URL splitting on
+  reload.
+- **sparkid entity IDs** — new records use collision-resistant, time-sortable
+  sparkids instead of UUID v4 (shorter short-codes, no near-simultaneous
+  collisions). Affects project/folder/request/share/hosts-profile ids and the
+  Postman export ids.
+
+### 📦 Other
+
+- Added `sparkid = "2.2.1"` dependency.
+- READMEs: added a "Community Edition — Recent Iterations" section and refreshed
+  the Pro Edition iterations log (notes full-text search, media storage,
+  SSH duplicate-session skip-MFA, etc.).
+- Pro-only modules (SSH / Docker / Kubernetes / stress testing / WYSIWYG notes
+  / PDF / relocate / autotest / cloud sharing / verve-server / notes-index /
+  media) remain exclusive to the Pro Edition.
+
 ## [0.5.0] - 2026-08-08
 
 ### 🔧 Enhancements (synced from upstream)

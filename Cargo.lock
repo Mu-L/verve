@@ -7763,6 +7763,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "sparkid"
+version = "2.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "511892369be19211db0b96c166cbcfcbc173a20d4ae354100a1570aaa93b9df2"
+dependencies = [
+ "rand 0.9.4",
+]
+
+[[package]]
 name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9021,7 +9030,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "verve"
-version = "0.5.0"
+version = "0.5.3"
 dependencies = [
  "anyhow",
  "boa_engine",
@@ -9049,6 +9058,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "smol",
+ "sparkid",
  "tokio",
  "tokio-tungstenite",
  "url",

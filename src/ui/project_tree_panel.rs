@@ -86,6 +86,9 @@ pub struct ProjectTreePanel {
     /// The tree node id the cursor is hovering over while dragging (drop
     /// target highlight). Cleared on drop.
     pub drop_target: Option<String>,
+    /// Tree node id (`request:<id>` / `folder:<id>`) currently awaiting a
+    /// move destination via the "移动至" picker overlay. `None` = closed.
+    pub move_picker_node: Option<String>,
     _subs: Vec<gpui::Subscription>,
     focus_handle: FocusHandle,
 }
@@ -109,6 +112,7 @@ impl ProjectTreePanel {
             collapsed_folders: std::collections::HashSet::new(),
             dragging_node: None,
             drop_target: None,
+            move_picker_node: None,
             _subs: Vec::new(),
             focus_handle: cx.focus_handle(),
         };
@@ -191,7 +195,7 @@ impl ProjectTreePanel {
         }
         // Root-level requests.
         for req in &project.requests {
-            if matches_query(&req.name, &query) {
+            if request_matches_query(req, &query) {
                 items.push(TreeItem::new(request_node(&req.id), req.name.clone()));
             }
         }
@@ -286,7 +290,7 @@ fn folder_tree_item(
         }
     }
     for req in &folder.requests {
-        if matches_query(&req.name, query) {
+        if request_matches_query(req, query) {
             children.push(TreeItem::new(request_node(&req.id), req.name.clone()));
         }
     }
@@ -304,6 +308,53 @@ fn folder_tree_item(
 
 fn matches_query(label: &str, query: &str) -> bool {
     query.is_empty() || label.to_lowercase().contains(query)
+}
+
+/// Whether a request matches the search query: case-insensitive substring
+/// match against its name OR its URL (so users can search by endpoint too).
+fn request_matches_query(req: &crate::state::models::ApiRequest, query: &str) -> bool {
+    matches_query(&req.name, query) || matches_query(&req.url, query)
+}
+
+/// A flattened, depth-aware folder entry for the "移动至" destination list.
+struct MoveDest {
+    id: String,
+    name: String,
+    depth: usize,
+}
+
+/// Collect every folder in the project as a flat list (depth-first, with an
+/// indentation `depth`). When `source_node` is a folder, that folder and its
+/// entire subtree are excluded — both because moving a folder into itself is
+/// nonsensical and because the model layer (`move_folder`) rejects cycles.
+fn collect_move_destinations(
+    project: &crate::state::models::Project,
+    source_node: &str,
+) -> Vec<MoveDest> {
+    let exclude = parse_folder_id(source_node).map(|s| s.to_string());
+    let mut out: Vec<MoveDest> = Vec::new();
+    fn walk(
+        folders: &[crate::state::models::Folder],
+        depth: usize,
+        exclude: &Option<String>,
+        out: &mut Vec<MoveDest>,
+    ) {
+        for f in folders {
+            // Skipping the excluded folder without recursing also prunes its
+            // whole subtree (a folder can't become its own descendant).
+            if exclude.as_deref() == Some(&f.id) {
+                continue;
+            }
+            out.push(MoveDest {
+                id: f.id.clone(),
+                name: f.name.clone(),
+                depth,
+            });
+            walk(&f.folders, depth + 1, exclude, out);
+        }
+    }
+    walk(&project.folders, 0, &exclude, &mut out);
+    out
 }
 
 /// Extract the node-id string payload from a node-carrying TreeAction.
@@ -781,6 +832,11 @@ impl Render for ProjectTreePanel {
                             })
                             .separator()
                             .menu_with_enable(
+                                "移动至",
+                                Box::new(TreeAction::MoveTo(node.clone())),
+                                true,
+                            )
+                            .menu_with_enable(
                                 "Rename",
                                 Box::new(TreeAction::Rename(node.clone())),
                                 true,
@@ -810,6 +866,12 @@ impl Render for ProjectTreePanel {
                 let state = self.state.clone();
                 let folder_id = self.pending_folder_add.clone();
                 this.child(render_folder_add_overlay(panel, state, folder_id, cx))
+            })
+            // "移动至" destination picker overlay (shown when move_picker_node set).
+            .when_some(self.move_picker_node.clone(), |this, node| {
+                let panel = cx.entity();
+                let state = self.state.clone();
+                this.child(render_move_picker_overlay(panel, state, node, cx))
             })
     }
 }
@@ -861,6 +923,185 @@ fn render_folder_add_overlay(
                                 cx.stop_propagation();
                             })
                             .child(new_request_picker(state, panel, folder_id)),
+                    ),
+            ),
+    )
+}
+
+/// One clickable destination row in the "移动至" picker. `depth` controls the
+/// left indentation (to convey hierarchy); clicking fires `action`.
+fn move_dest_row(
+    id: impl Into<gpui::ElementId>,
+    label: String,
+    depth: usize,
+    theme: &gpui_component::Theme,
+    action: impl Fn(&mut App) + 'static,
+) -> gpui::AnyElement {
+    div()
+        .id(id)
+        .w_full()
+        .px(px(8.))
+        .py(px(6.))
+        .flex()
+        .flex_row()
+        .gap_2()
+        .items_center()
+        .text_sm()
+        .rounded(px(4.))
+        .text_color(theme.foreground)
+        .hover(|this| this.bg(theme.accent.opacity(0.5)))
+        .child(
+            h_flex()
+                .gap_2()
+                .items_center()
+                // Indent the row by its folder depth.
+                .child(div().w(px(depth as f32 * 14.0)))
+                .child(
+                    div()
+                        .text_color(theme.muted_foreground)
+                        .child(IconName::Folder),
+                ),
+        )
+        .child(label)
+        // on_mouse_down (+ stop_propagation) wins the backdrop race; see menu_item.
+        .on_mouse_down(MouseButton::Left, move |_, _window, cx: &mut App| {
+            cx.stop_propagation();
+            action(cx);
+        })
+        .into_any_element()
+}
+
+/// Centered "移动至" destination picker overlay. A translucent backdrop closes
+/// the picker on outside click; the card lists "根目录" plus every folder
+/// (indented by depth). Clicking a row moves the source node there.
+fn render_move_picker_overlay(
+    panel: gpui::Entity<ProjectTreePanel>,
+    state: gpui::Entity<AppState>,
+    source_node: String,
+    cx: &App,
+) -> impl IntoElement {
+    let theme = cx.theme().clone();
+    let panel_close = panel.clone();
+
+    // Snapshot the destination folders from the active project (depth-first,
+    // excluding the source folder's own subtree when moving a folder).
+    let dests: Vec<MoveDest> = state
+        .read(cx)
+        .active_project()
+        .map(|p| collect_move_destinations(p, &source_node))
+        .unwrap_or_default();
+
+    // Captures for the "根目录" row (separate clones so the folder-list map can
+    // move the originals).
+    let panel_root = panel.clone();
+    let source_root = source_node.clone();
+    let theme_root = theme.clone();
+
+    deferred(
+        div()
+            .absolute()
+            .top_0()
+            .left_0()
+            .size_full()
+            .bg(gpui::black().opacity(0.3))
+            .on_mouse_down(MouseButton::Left, move |_, _window, cx: &mut App| {
+                let _ = panel_close.update(cx, |this, cx| {
+                    this.move_picker_node = None;
+                    cx.notify();
+                });
+            })
+            .child(
+                v_flex()
+                    .absolute()
+                    .top(px(120.))
+                    .left(px(0.))
+                    .right(px(0.))
+                    .flex()
+                    .justify_center()
+                    .child(
+                        div()
+                            .w(px(380.))
+                            .max_w(px(460.))
+                            .p(px(8.))
+                            .rounded(px(8.))
+                            .bg(theme.background)
+                            .border_1()
+                            .border_color(theme.border)
+                            .shadow_md()
+                            // Stop propagation so clicking the card doesn't close.
+                            .on_mouse_down(MouseButton::Left, |_, _window, cx: &mut App| {
+                                cx.stop_propagation();
+                            })
+                            .child(
+                                v_flex()
+                                    .gap(px(2.))
+                                    .child(
+                                        div()
+                                            .text_sm()
+                                            .font_weight(FontWeight::SEMIBOLD)
+                                            .px_2()
+                                            .py_1()
+                                            .child("移动至"),
+                                    )
+                                    .child(
+                                        div()
+                                            .id("move-dest-scroll")
+                                            .max_h(px(360.))
+                                            .overflow_y_scroll()
+                                            .child(
+                                                v_flex()
+                                                    .gap(px(1.))
+                                                    .child(move_dest_row(
+                                                        "move-dest-root",
+                                                        "根目录".to_string(),
+                                                        0,
+                                                        &theme_root,
+                                                        move |cx: &mut App| {
+                                                            let _ = panel_root.update(
+                                                                cx,
+                                                                |this, cx| {
+                                                                    this.apply_move_to(
+                                                                        source_root.clone(),
+                                                                        MoveTarget::ToRoot,
+                                                                        cx,
+                                                                    );
+                                                                },
+                                                            );
+                                                        },
+                                                    ))
+                                                    .children(dests.iter().enumerate().map(
+                                                        move |(i, d)| {
+                                                            let panel = panel.clone();
+                                                            let source = source_node.clone();
+                                                            let id = d.id.clone();
+                                                            let name = d.name.clone();
+                                                            let depth = d.depth;
+                                                            let theme_row = theme.clone();
+                                                            move_dest_row(
+                                                                ("move-dest-folder", i),
+                                                                name,
+                                                                depth,
+                                                                &theme_row,
+                                                                move |cx: &mut App| {
+                                                                    let _ = panel.update(
+                                                                        cx,
+                                                                        |this, cx| {
+                                                                            this.apply_move_to(
+                                                                        source.clone(),
+                                                                        MoveTarget::IntoFolder(
+                                                                            id.clone(),
+                                                                        ),
+                                                                        cx,
+                                                                    );
+                                                                        },
+                                                                    );
+                                                                },
+                                                            )
+                                                        },
+                                                    )),
+                                            ),
+                                    ),
+                            ),
                     ),
             ),
     )
@@ -1518,6 +1759,58 @@ impl ProjectTreePanel {
         });
     }
 
+    /// Open the "移动至" destination picker for a tree node (`request:<id>` or
+    /// `folder:<id>`). The picker is a centered overlay listing every folder
+    /// (plus a "根目录" root option); selecting one performs the move via the
+    /// model's `move_request` / `move_folder` + `MoveTarget`.
+    pub fn start_move_to(&mut self, node: String, cx: &mut Context<Self>) {
+        // Sync AppState selection to the moved node so the highlight follows
+        // (mirrors start_rename).
+        if let Some(req_id) = parse_request_id(&node) {
+            let req_id = req_id.to_string();
+            if self.state.read(cx).selected_request.as_deref() != Some(&req_id) {
+                self.on_select_request(req_id, cx);
+            }
+        } else if let Some(fid) = parse_folder_id(&node) {
+            let fid = fid.to_string();
+            if self.state.read(cx).selected_folder.as_deref() != Some(&fid) {
+                self.on_select_folder(fid, cx);
+            }
+        }
+        self.move_picker_node = Some(node);
+        cx.notify();
+    }
+
+    /// Execute the move requested by the "移动至" picker: relocate the source
+    /// node (`request:<id>` / `folder:<id>`) into the chosen destination, then
+    /// close the picker. Reuses the model's `move_request` / `move_folder` and
+    /// the `MoveTarget` enum (same path drag-and-drop uses).
+    pub fn apply_move_to(&mut self, source_node: String, dest: MoveTarget, cx: &mut Context<Self>) {
+        let src_req = parse_request_id(&source_node).map(|s| s.to_string());
+        let src_folder = parse_folder_id(&source_node).map(|s| s.to_string());
+
+        let moved = self.state.update(cx, |s, cx| {
+            let project = match s.active_project_mut() {
+                Some(p) => p,
+                None => return false,
+            };
+            let ok = if let Some(req_id) = src_req {
+                project.move_request(&req_id, &dest)
+            } else if let Some(fid) = src_folder {
+                project.move_folder(&fid, &dest)
+            } else {
+                false
+            };
+            if ok {
+                s.notify_workspace(cx);
+            }
+            ok
+        });
+        let _ = moved;
+        self.move_picker_node = None;
+        cx.notify();
+    }
+
     /// Resolve the current display name for a tree node id.
     fn current_name_for_node(&self, node: &str, cx: &mut Context<Self>) -> Option<String> {
         let project = self.state.read(cx).active_project()?;
@@ -1751,7 +2044,12 @@ impl ProjectTreePanel {
                 self.show_info("复制到其它分支", "分支功能开发中。", window, cx);
             }
             TreeAction::MoveTo(_) => {
-                self.show_info("移动至", "请拖拽或右键选择目标文件夹。", window, cx);
+                // Defer so the popup/context menu has fully closed before we
+                // open the destination picker overlay.
+                let node = node.to_string();
+                cx.defer_in(window, move |this, _window, cx| {
+                    this.start_move_to(node, cx);
+                });
             }
             TreeAction::Copy(_) => {
                 if let Some(id) = req_id {

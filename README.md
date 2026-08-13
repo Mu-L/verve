@@ -43,7 +43,7 @@ Verve is built on **Rust + [GPUI](https://github.com/zed-industries/zed)** (the 
 
 <br/>
 
-[Features](#-features) · [Community vs Pro](#-community-vs-pro) · [Pro Updates](#-pro-edition--recent-iterations) · [Getting Started](#-getting-started) · [Pro Edition](#-pro-edition--sponsor-to-unlock)
+[Features](#-features) · [Community vs Pro](#-community-vs-pro) · [Community Updates](#-community-edition--recent-iterations) · [Pro Updates](#-pro-edition--recent-iterations) · [Getting Started](#-getting-started) · [Pro Edition](#-pro-edition--sponsor-to-unlock)
 
 </div>
 
@@ -470,6 +470,25 @@ The Pro Edition (pre-compiled binaries + continuous updates + priority support) 
 
 ---
 
+## 🆕 Community Edition — Recent Iterations
+
+The Community Edition keeps improving too. This is a transparent log of what has landed in the free, open-source build (the same code in this repo). Pro-only features (SSH / Docker / K8s / notes / PDF / testing) are listed separately below.
+
+> Last updated: 2026-08
+
+- **Global parameters / headers / cookies** — project-level globals are auto-applied to every request; a same-named per-request entry overrides the global one (case-insensitive, correct for HTTP headers).
+- **Per-request base URL override (tri-state)** — each request can inherit the folder's base URL, explicitly disable any prefix, or set a custom one (supports `{{var}}` placeholders).
+- **Postman-style dynamic variables** — `{{$random}}`, `{{$uuid}}`, `{{$timestamp}}`, and `{{$sparkid}}` (21-char time-sortable id) are expanded to a fresh value on every send; a user-defined variable of the same name still wins.
+- **Clear response on send** — clicking Send immediately clears the previous response and shows a "请求中…" (requesting) state until the reply arrives, so stale content is never mistaken for the live result.
+- **Smarter request search** — the project tree search now matches request **URLs/paths**, not just names.
+- **"Move to" picker** — move a request or folder into another folder via a searchable destination picker (in addition to drag-and-drop).
+- **Tab overflow dropdown** — when too many request tabs are open, a `»` dropdown lists the rest, and `cmd-w` / `ctrl-w` closes the active tab.
+- **Environment manager** — the environments window now fills its container, has an overflow-scroll, and asks for confirmation before deleting a non-empty row.
+- **KV table** — value cells expand on focus when content overflows, with configurable width / description flex / enabled-toggle.
+- **sparkid entity IDs** — new records now use collision-resistant, time-sortable sparkids instead of UUID v4 (shorter codes, no near-simultaneous collisions).
+
+---
+
 ## 🆕 Pro Edition — Recent Iterations
 
 The Pro Edition ships new work almost every day. This section is a transparent log of recent Pro-side iterations, so the community can see exactly what's being built on top of the free Community Edition. (Community Edition users get the full daily API workflow for free; these land in the Pro build.)
@@ -479,13 +498,16 @@ The Pro Edition ships new work almost every day. This section is a transparent l
 ### 🔐 SSH Terminal
 
 - **MFA / 2FA authentication** — new `keyboard-interactive` auth type for TOTP / OTP / hardware-key servers. The verification code is prompted dynamically at connect time, and "password + OTP" pairing is supported (account password first, then the OTP).
-- **Duplicate session** — clone an SSH session into a fresh, independent tab (own socket & session id). It reuses the already-authenticated connection, so an MFA-protected host won't ask for a second OTP.
+- **Duplicate session** — clone an SSH session into a fresh, independent tab (own socket & session id). It reuses the already-authenticated connection, so an MFA-protected host won't ask for a second OTP (skip-MFA on duplicate).
 - **Double-click word selection** in the terminal.
 - **Scrollback buffer**, clear-history purge, and monospace fill for the terminal.
 - **Smarter connection errors** — failures are classified (auth / network / timeout) with a hint to grant macOS local-network permission when needed.
 
 ### 🗒️ Markdown Notes & PDF
 
+- **Full-text search** — notes are indexed with a tantivy inverted index for instant keyword search across the whole notebook.
+- **Media storage (local + S3)** — images and videos embedded in notes are stored locally or pushed to S3, with a cleanup module for orphaned media.
+- **Notes scale & loading** — optimized load algorithm, an original-file management mechanism, node move, tab collapse, live word count, and auto-expand of long text on focus.
 - **PDF export overhaul** — switched to a new PDF export engine.
 - **Markdown rendering** — multiple rounds of rendering refinements.
 

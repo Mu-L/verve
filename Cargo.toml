@@ -1,6 +1,6 @@
 [package]
 name = "verve"
-version = "0.5.0"
+version = "0.5.3"
 edition = "2024"
 description = "Verve — an offline-first, one-stop developer workbench built with Rust."
 publish = false
@@ -14,7 +14,7 @@ homepage = "https://github.com/aios-rs/verve"
 name = "Verve"
 identifier = "com.verve.app"
 icon = ["assets/icons/verve.icns"]
-version = "0.5.0"
+version = "0.5.3"
 resources = []
 copyright = "Copyright (c) 2026 Verve. All rights reserved."
 category = "Developer Tool"
@@ -124,6 +124,9 @@ gix = { version = "0.69", default-features = false, features = [
 
 # Semantic version comparison for the auto-update check.
 semver = "1"
+# Time-sortable, collision-resistant Base58 entity id (replaces uuid v4 for
+# new records). Also exposed as the `{{$sparkid}}` dynamic request variable.
+sparkid = "2.2.1"
 # Embed Verve-specific Lucide SVG icons at compile time (composite AssetSource).
 rust-embed = "8.7"
 

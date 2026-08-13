@@ -9,6 +9,7 @@ actions!(
     [
         SaveWorkspace,
         NewRequest,
+        CloseFile,
     ]
 );
 use crate::assets::{
@@ -577,6 +578,7 @@ impl Render for VerveApp {
             .bg(theme.background)
             .text_color(theme.foreground)
             .on_action(cx.listener(Self::on_save_workspace))
+            .on_action(cx.listener(Self::on_close_file))
             .child(self.render_title_bar(cx))
             .child(
                 h_flex()
