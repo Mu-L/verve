@@ -41,7 +41,7 @@ depends = ["libssl3 | libssl1.1", "libc6 (>= 2.31)"]
 section = "devel"
 priority = "optional"
 assets = [
-    ["target/release/verve", "usr/lib/verve/", "755"],
+    ["target/release/verve", "usr/bin/", "755"],
     ["assets/icons/verve.png", "usr/share/icons/hicolor/512x512/apps/verve.png", "644"],
     ["assets/verve.desktop", "usr/share/applications/verve.desktop", "644"],
 ]
