@@ -2,6 +2,21 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.5.4] - 2026-08-14
+
+### 🔧 Enhancements (synced from upstream)
+
+- **Folder base-URL dropdown scroll** — the "select from environment variables"
+  popover for a folder's base URL now scrolls when the list is long, and shows
+  the bare env-var name instead of the `{{name}}` placeholder.
+
+### 📝 Docs
+
+- READMEs: refreshed the Pro Edition iterations log — editor per-frame CPU
+  optimization (word-count throttle, render-cache reuse, window bookkeeping),
+  smoother markdown/notes scrolling, a Markdown paste ordered-list fix, and a
+  native directory picker for the media root.
+
 ## [0.5.3] - 2026-08-13
 
 ### 🔧 Enhancements (synced from upstream)

@@ -506,8 +506,10 @@ The Pro Edition ships new work almost every day. This section is a transparent l
 ### 🗒️ Markdown Notes & PDF
 
 - **Full-text search** — notes are indexed with a tantivy inverted index for instant keyword search across the whole notebook.
-- **Media storage (local + S3)** — images and videos embedded in notes are stored locally or pushed to S3, with a cleanup module for orphaned media.
+- **Media storage (local + S3)** — images and videos embedded in notes are stored locally or pushed to S3, with a cleanup module for orphaned media. The media root folder can now be picked from a native directory browser.
 - **Notes scale & loading** — optimized load algorithm, an original-file management mechanism, node move, tab collapse, live word count, and auto-expand of long text on focus.
+- **Editor performance** — reduced per-frame CPU via word-count throttling, render-cache reuse, and lighter window bookkeeping; markdown/notes scrolling is now smoother.
+- **Markdown paste fix** — fixed a bug where pasting formatted Markdown rendered ordered-list numbering incorrectly.
 - **PDF export overhaul** — switched to a new PDF export engine.
 - **Markdown rendering** — multiple rounds of rendering refinements.
 

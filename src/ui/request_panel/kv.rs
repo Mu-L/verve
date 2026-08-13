@@ -348,7 +348,12 @@ impl RequestPanel {
                                                                     .py_1()
                                                                     .child("从环境变量选择"),
                                                             )
-                                                            .children(env_vars.iter().enumerate().map(|(i, (k, v))| {
+                                                            .child(
+                                                                div()
+                                                                    .id("folder-baseurl-scroll")
+                                                                    .max_h(px(300.))
+                                                                    .overflow_y_scroll()
+                                                                    .children(env_vars.iter().enumerate().map(|(i, (k, v))| {
                                                                 let val_display = v.trim_end_matches('/').to_string();
                                                                 let key = k.clone();
                                                                 // Store the {{key}} placeholder so the stored
@@ -376,7 +381,7 @@ impl RequestPanel {
                                                                                 div()
                                                                                     .text_sm()
                                                                                     .font_weight(FontWeight::SEMIBOLD)
-                                                                                    .child(format!("{{{{{}}}}}", key)),
+                                                                                    .child(key.clone()),
                                                                             )
                                                                             .child(
                                                                                 div()
@@ -405,6 +410,7 @@ impl RequestPanel {
                                                                         window.refresh();
                                                                     })
                                                             })),
+                                                            ),
                                                     )
                                                     .into_any_element()
                                             }
