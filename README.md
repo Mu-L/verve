@@ -476,6 +476,7 @@ The Community Edition keeps improving too. This is a transparent log of what has
 
 > Last updated: 2026-08
 
+- **Windows titlebar fixed (issue #2)** — the window chrome is now drawn by gpui-component's `TitleBar`: the bar is a drag region and Windows/Linux get min/max/close buttons. Previously the Windows build opened with no titlebar at all.
 - **`{{variable}}` auto-completion** — typing `{{` in the URL, KV value, or base-URL inputs opens an LSP-style completion popover listing global + environment variables (plus dynamic ones like `$random`) with scope badges, filtering as you type.
 - **Variable rename sync** — renaming an environment/global variable key rewrites every `{{oldKey}}` reference across requests, folders, params/headers/cookies, and base-URL overrides automatically.
 - **Base-URL plain display** — the folder base-URL input shows the resolved plain URL (no `{{var}}` braces) while keeping the placeholder in storage, so variable linkage stays intact.

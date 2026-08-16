@@ -2,6 +2,20 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.5.7] - 2026-08-16
+
+### 🐛 Fixes (synced from upstream)
+
+- **Windows titlebar missing (issue #2)** — the main window is created with
+  `appears_transparent`, which hides the native titlebar; nothing redrew the
+  window chrome, so the Windows build had no min/max/close buttons and the bar
+  couldn't drag the window. The title bar is now wrapped in gpui-component's
+  `TitleBar`, which owns the drag region and draws min/max/close controls on
+  Windows/Linux (macOS keeps native traffic lights, appearance unchanged).
+- The settings window got the same treatment (drag region + drawn controls;
+  macOS keeps the self-drawn close button) and both auxiliary windows are now
+  minimizable.
+
 ## [0.5.6] - 2026-08-15
 
 ### 🔧 Enhancements (synced from upstream)

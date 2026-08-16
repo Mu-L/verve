@@ -12,15 +12,33 @@ use crate::share::models::ShareScope;
 use crate::state::{AppEvent, AppState};
 use gpui::prelude::FluentBuilder as _;
 use gpui::{img, *};
-use gpui_component::{ActiveTheme, Disableable as _, Icon, IconName, Selectable as _, Sizable as _, WindowExt,
+use gpui_component::{ActiveTheme, Disableable as _, Icon, IconName, Selectable as _, Sizable as _, TitleBar, WindowExt,
                      button::{Button, ButtonVariants as _}, h_flex, popover::Popover, v_flex};
 
 impl VerveApp {
     pub(super) fn render_title_bar(&mut self, cx: &mut Context<Self>) -> gpui::AnyElement {
-        match self.active_view {
+        let theme = cx.theme().clone();
+        let bar = match self.active_view {
             SideView::JsonFormat => self.render_json_title_bar(cx).into_any_element(),
             _ => self.render_api_title_bar(cx).into_any_element(),
-        }
+        };
+        // The gpui-component TitleBar owns the cross-platform window chrome:
+        // the bar area is a drag region, and Windows/Linux get drawn
+        // min/max/close controls (macOS keeps its native traffic lights).
+        // Without it the Windows build has no title bar at all — the main
+        // window is created with `appears_transparent`, which hides the
+        // native one (issue #2). Refined to keep Verve's existing 40px
+        // height, muted background, and border so macOS is unchanged.
+        TitleBar::new()
+            .h(px(40.))
+            .when(cfg!(target_os = "macos"), |this| this.pl(px(78.)))
+            .bg(theme.muted)
+            .border_color(theme.border)
+            // Linux close button: match the window's should-close behavior
+            // (hide instead of quitting) instead of the default remove_window.
+            .on_close_window(|_, window, _cx| window.minimize_window())
+            .child(bar)
+            .into_any_element()
     }
 
     pub(super) fn render_api_title_bar(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -55,17 +73,15 @@ impl VerveApp {
         let _ = theme.clone();
 
         h_flex()
-            .h(px(40.))
-            // On macOS the (transparent) titlebar hosts the traffic-light
-            // buttons on the left; pad the content past them.
-            .when(cfg!(target_os = "macos"), |this| this.pl(px(78.)))
-            .when(!cfg!(target_os = "macos"), |this| this.pl_3())
+            // The outer TitleBar (render_title_bar) owns the height, left
+            // padding, border, and background — including the platform window
+            // controls on Windows/Linux.
+            .h_full()
+            .w_full()
+            .min_w_0()
             .pr_3()
             .gap_2()
             .items_center()
-            .border_b_1()
-            .border_color(theme.border)
-            .bg(theme.muted)
             // Far-left activity rail collapse/expand toggle.
             .child(self.render_rail_toggle(cx))
             // Sidebar (tree) collapse/expand toggle.
@@ -750,15 +766,15 @@ impl VerveApp {
         let theme = cx.theme().clone();
 
         h_flex()
-            .h(px(40.))
-            .when(cfg!(target_os = "macos"), |this| this.pl(px(78.)))
-            .when(!cfg!(target_os = "macos"), |this| this.pl_3())
+            // The outer TitleBar (render_title_bar) owns the height, left
+            // padding, border, and background — including the platform window
+            // controls on Windows/Linux.
+            .h_full()
+            .w_full()
+            .min_w_0()
             .pr_3()
             .gap_2()
             .items_center()
-            .border_b_1()
-            .border_color(theme.border)
-            .bg(theme.muted)
             .child(self.render_rail_toggle(cx))
             // Icon + title
             .child(
