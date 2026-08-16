@@ -1,6 +1,6 @@
 [package]
 name = "verve"
-version = "0.5.4"
+version = "0.5.6"
 edition = "2024"
 description = "Verve — an offline-first, one-stop developer workbench built with Rust."
 publish = false
@@ -14,7 +14,7 @@ homepage = "https://github.com/aios-rs/verve"
 name = "Verve"
 identifier = "com.verve.app"
 icon = ["assets/icons/verve.icns"]
-version = "0.5.4"
+version = "0.5.6"
 resources = []
 copyright = "Copyright (c) 2026 Verve. All rights reserved."
 category = "Developer Tool"
@@ -129,6 +129,11 @@ semver = "1"
 sparkid = "2.2.1"
 # Embed Verve-specific Lucide SVG icons at compile time (composite AssetSource).
 rust-embed = "8.7"
+# --- `{{variable}}` auto-completion (LSP-style) ------------------------------
+# Completion-item types for the variable auto-completion popover.
+lsp-types = { version = "0.97.0", features = ["proposed"] }
+# Rope text buffer for offset/position math in the completion engine.
+ropey = { version = "=2.0.0-beta.1", features = ["metric_lines_lf", "metric_utf16"] }
 
 [lints.clippy]
 dbg_macro = "deny"

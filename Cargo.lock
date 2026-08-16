@@ -9030,7 +9030,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "verve"
-version = "0.5.4"
+version = "0.5.6"
 dependencies = [
  "anyhow",
  "boa_engine",
@@ -9046,10 +9046,12 @@ dependencies = [
  "http_client",
  "libc",
  "log",
+ "lsp-types",
  "qrcode",
  "regex",
  "reqwest",
  "reqwest_client",
+ "ropey",
  "rust-embed",
  "rust-i18n",
  "rust-i18n-support",

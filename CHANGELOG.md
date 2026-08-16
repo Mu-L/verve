@@ -2,7 +2,29 @@
 
 All notable changes to Verve will be documented in this file.
 
-## [0.5.4] - 2026-08-14
+## [0.5.6] - 2026-08-15
+
+### 🔧 Enhancements (synced from upstream)
+
+- **`{{variable}}` auto-completion** — typing `{{` in URL / KV value / base-URL
+  inputs now opens an LSP-style completion popover listing global + environment
+  variables (and dynamic variables like `$random`) with scope badges; filters as
+  you type.
+- **Variable rename sync** — renaming an environment/global variable key now
+  rewrites every `{{oldKey}}` placeholder reference across requests, folders,
+  params/headers/cookies, and base-URL overrides, so existing references stay
+  valid.
+- **Base-URL plain display** — the folder base-URL input shows the resolved
+  plain URL (no `{{var}}` braces) while persisting the original placeholder, so
+  variable linkage stays intact.
+
+### 📝 Docs
+
+- READMEs: refreshed both iteration logs — Community (variable completion /
+  rename sync) and Pro (SSH local terminal mode, notes/markdown per-frame perf,
+  word-count fix).
+
+## [0.5.5] - 2026-08-14
 
 ### 🔧 Enhancements (synced from upstream)
 

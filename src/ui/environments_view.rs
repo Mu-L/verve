@@ -153,7 +153,7 @@ impl EnvironmentsView {
                     .map(|e| e.variables.clone())
             })
             .unwrap_or_default();
-        self.rows = kv_table::rows_from_pairs(&vars, window, cx);
+        self.rows = kv_table::rows_from_pairs(&vars, self.state.clone(), window, cx);
         self.name_input.update(cx, |s, cx| {
             let name = self
                 .state
@@ -191,8 +191,14 @@ impl EnvironmentsView {
                 self.state.update(cx, |s, cx| {
                     if let Some(p) = s.active_project_mut() {
                         if let Some(e) = p.environments.iter_mut().find(|e| e.id == id) {
+                            // Detect variable-key renames before overwriting so we
+                            // can propagate {{oldKey}} → {{newKey}} across the project.
+                            let renames = Self::detect_renames(&e.variables, &pairs);
                             e.variables = pairs;
                             e.name = name;
+                            if !renames.is_empty() {
+                                p.apply_var_renames(&renames);
+                            }
                         }
                     }
                     s.notify_edited(cx);
@@ -211,6 +217,14 @@ impl EnvironmentsView {
             Some(SettingsSection::Global(scope)) => {
                 self.state.update(cx, |s, cx| {
                     if let Some(project) = s.active_project_mut() {
+                        // Detect variable-key renames for the global-variables
+                        // scope before overwriting, to propagate references.
+                        let renames = match scope {
+                            crate::ui::kv_manager_view::KvScope::GlobalVariables => {
+                                Self::detect_renames(&project.global_variables, &pairs)
+                            }
+                            _ => Vec::new(),
+                        };
                         match scope {
                             crate::ui::kv_manager_view::KvScope::GlobalParams => {
                                 project.global_params = pairs
@@ -224,6 +238,9 @@ impl EnvironmentsView {
                             crate::ui::kv_manager_view::KvScope::GlobalCookies => {
                                 project.global_cookies = pairs
                             }
+                        }
+                        if !renames.is_empty() {
+                            project.apply_var_renames(&renames);
                         }
                     }
                     s.notify_edited(cx);
@@ -251,6 +268,25 @@ impl EnvironmentsView {
             // substitution-relevant section so the next edit re-emits.
             self.last_subst_sig = None;
         }
+    }
+
+    /// Detect variable-key renames by aligning old/new rows positionally: a
+    /// row whose `value` is unchanged but whose `key` changed counts as a
+    /// rename. Rows whose value also changed (or rows added/removed, which
+    /// shift the index alignment) are ignored to avoid false positives.
+    fn detect_renames(old: &[KeyValue], new: &[KeyValue]) -> Vec<(String, String)> {
+        old.iter()
+            .zip(new.iter())
+            .filter_map(|(o, nw)| {
+                let ok = o.key.trim();
+                let nk = nw.key.trim();
+                if !ok.is_empty() && ok != nk && o.value == nw.value {
+                    Some((ok.to_string(), nk.to_string()))
+                } else {
+                    None
+                }
+            })
+            .collect()
     }
 
     /// Set this environment as active and persist.
@@ -358,7 +394,7 @@ impl EnvironmentsView {
         self.active_section = Some(SettingsSection::Global(scope));
         // Reload rows from the chosen global scope.
         let pairs = read_global(&self.state, scope, cx);
-        self.rows = kv_table::rows_from_pairs(&pairs, window, cx);
+        self.rows = kv_table::rows_from_pairs(&pairs, self.state.clone(), window, cx);
         self.last_built_id = Some(format!("global-{:?}", scope));
         cx.notify();
     }
@@ -472,7 +508,7 @@ impl Render for EnvironmentsView {
             }),
             on_add: Arc::new(move |window, cx: &mut App| {
                 let _ = view_add.update(cx, |this, cx| {
-                    this.rows.push(KvRow::empty(window, cx));
+                    this.rows.push(KvRow::empty(this.state.clone(), window, cx));
                     this.commit(cx);
                 });
             }),
@@ -871,7 +907,7 @@ impl EnvironmentsView {
                 }
                 Some(SettingsSection::Global(scope)) => {
                     let pairs = read_global(&self.state, *scope, cx);
-                    self.rows = kv_table::rows_from_pairs(&pairs, window, cx);
+                    self.rows = kv_table::rows_from_pairs(&pairs, self.state.clone(), window, cx);
                 }
                 None => {
                     self.rows.clear();

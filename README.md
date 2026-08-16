@@ -476,6 +476,9 @@ The Community Edition keeps improving too. This is a transparent log of what has
 
 > Last updated: 2026-08
 
+- **`{{variable}}` auto-completion** — typing `{{` in the URL, KV value, or base-URL inputs opens an LSP-style completion popover listing global + environment variables (plus dynamic ones like `$random`) with scope badges, filtering as you type.
+- **Variable rename sync** — renaming an environment/global variable key rewrites every `{{oldKey}}` reference across requests, folders, params/headers/cookies, and base-URL overrides automatically.
+- **Base-URL plain display** — the folder base-URL input shows the resolved plain URL (no `{{var}}` braces) while keeping the placeholder in storage, so variable linkage stays intact.
 - **Global parameters / headers / cookies** — project-level globals are auto-applied to every request; a same-named per-request entry overrides the global one (case-insensitive, correct for HTTP headers).
 - **Per-request base URL override (tri-state)** — each request can inherit the folder's base URL, explicitly disable any prefix, or set a custom one (supports `{{var}}` placeholders).
 - **Postman-style dynamic variables** — `{{$random}}`, `{{$uuid}}`, `{{$timestamp}}`, and `{{$sparkid}}` (21-char time-sortable id) are expanded to a fresh value on every send; a user-defined variable of the same name still wins.
@@ -501,14 +504,15 @@ The Pro Edition ships new work almost every day. This section is a transparent l
 - **Duplicate session** — clone an SSH session into a fresh, independent tab (own socket & session id). It reuses the already-authenticated connection, so an MFA-protected host won't ask for a second OTP (skip-MFA on duplicate).
 - **Double-click word selection** in the terminal.
 - **Scrollback buffer**, clear-history purge, and monospace fill for the terminal.
+- **Local terminal mode** — run a local shell directly in the SSH panel (no host needed), with caret positioning and modifier-key support (per-OS input handling for macOS/Linux/Windows).
 - **Smarter connection errors** — failures are classified (auth / network / timeout) with a hint to grant macOS local-network permission when needed.
 
 ### 🗒️ Markdown Notes & PDF
 
 - **Full-text search** — notes are indexed with a tantivy inverted index for instant keyword search across the whole notebook.
 - **Media storage (local + S3)** — images and videos embedded in notes are stored locally or pushed to S3, with a cleanup module for orphaned media. The media root folder can now be picked from a native directory browser.
-- **Notes scale & loading** — optimized load algorithm, an original-file management mechanism, node move, tab collapse, live word count, and auto-expand of long text on focus.
-- **Editor performance** — reduced per-frame CPU via word-count throttling, render-cache reuse, and lighter window bookkeeping; markdown/notes scrolling is now smoother.
+- **Notes scale & loading** — optimized load algorithm, an original-file management mechanism, node move, tab collapse, live word count (with a fixed word-count edge case), and auto-expand of long text on focus.
+- **Editor performance** — reduced per-frame CPU via word-count throttling, render-cache reuse, and lighter window bookkeeping; markdown/notes scrolling is now smoother, with further per-frame hot-path costs eliminated in notes/markdown rendering.
 - **Markdown paste fix** — fixed a bug where pasting formatted Markdown rendered ordered-list numbering incorrectly.
 - **PDF export overhaul** — switched to a new PDF export engine.
 - **Markdown rendering** — multiple rounds of rendering refinements.

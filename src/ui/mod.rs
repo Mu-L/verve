@@ -21,5 +21,6 @@ pub mod share_dialog;
 pub mod share_panel;
 pub mod theme;
 pub mod themes;
+pub mod var_completion;
 
 pub use app::VerveApp;

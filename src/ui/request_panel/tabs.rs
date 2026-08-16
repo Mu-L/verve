@@ -583,7 +583,7 @@ impl RequestPanel {
                                             }),
                                             on_add: Arc::new(move |window, cx| {
                                                 let _ = ent_add1.update(cx, |this, cx| {
-                                                    this.mock_headers_rows.push(KvRow::empty(window, cx));
+                                                    this.mock_headers_rows.push(KvRow::empty(this.state.clone(), window, cx));
                                                     this.commit_to_model(cx);
                                                     cx.notify();
                                                 });
@@ -698,7 +698,7 @@ impl RequestPanel {
                                                     }),
                                                     on_add: Arc::new(move |window, cx| {
                                                         let _ = ent_add2.update(cx, |this, cx| {
-                                                            this.mock_match_query_rows.push(KvRow::empty(window, cx));
+                                                            this.mock_match_query_rows.push(KvRow::empty(this.state.clone(), window, cx));
                                                             this.commit_to_model(cx);
                                                             cx.notify();
                                                         });
@@ -734,7 +734,7 @@ impl RequestPanel {
                                                     }),
                                                     on_add: Arc::new(move |window, cx| {
                                                         let _ = ent_add3.update(cx, |this, cx| {
-                                                            this.mock_match_header_rows.push(KvRow::empty(window, cx));
+                                                            this.mock_match_header_rows.push(KvRow::empty(this.state.clone(), window, cx));
                                                             this.commit_to_model(cx);
                                                             cx.notify();
                                                         });
