@@ -2,6 +2,20 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.5.8] - 2026-08-17
+
+### 🔧 Enhancements (synced from upstream)
+
+- **Accurate curl commands** — "Copy as cURL" in the project-tree context menu
+  now generates the command from the request that was actually sent (variables
+  substituted, query params appended, base URL joined, headers/body/auth
+  included), via a dedicated `http::curl` module. Previously it approximated
+  from the stored definition, producing wrong URLs when placeholders or the
+  folder base URL were in play.
+- **"实际请求" (actual request) tab** — the response panel now shows exactly
+  what went on the wire after `prepare()`: the resolved request as a text
+  block plus its executable curl form, both captured on the `Response`.
+
 ## [0.5.7] - 2026-08-16
 
 ### 🐛 Fixes (synced from upstream)

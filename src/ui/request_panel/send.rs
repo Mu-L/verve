@@ -1,21 +1,18 @@
 //! Protocol send engine: HTTP/SSE/WebSocket/TCP/gRPC/Socket.IO dispatch,
 //! the stop-flag machinery, and error-response helpers.
-use std::collections::BTreeMap;
-use std::sync::Arc;
+use super::RequestPanel;
+use super::folder_helpers::{apply_autosave_example, resolve_effective_base_url};
+use super::{register_stop, truncate_history_body, unregister_stop};
+use crate::http;
+use crate::state::AppEvent;
+use crate::state::models::*;
 use gpui::prelude::FluentBuilder as _;
 use gpui::*;
-use gpui_component::Icon;
 use gpui_component::WindowExt as _;
-use gpui_component::input::{Input, InputEvent, InputState};
-use gpui_component::select::{Select, SelectEvent, SelectState};
-use gpui_component::{ActiveTheme, Disableable as _, IconName, Selectable as _, Sizable as _, button::{Button, ButtonVariants as _}, checkbox::Checkbox, h_flex, popover::Popover, v_flex};
-use crate::http;
-use crate::state::models::*;
-use crate::state::{AppEvent, AppState};
-use crate::ui::kv_table::{self, KvRow};
-use super::folder_helpers::{apply_autosave_example, resolve_effective_base_url};
-use super::{RequestPanel, ReqTab, FolderKvSection, FolderTab};
-use super::{register_stop, unregister_stop, stop_flags, truncate_history_body};
+use gpui_component::{
+    Disableable as _, Selectable as _, Sizable as _, button::ButtonVariants as _,
+};
+use std::collections::BTreeMap;
 
 impl RequestPanel {
     pub fn send(&mut self, cx: &mut Context<Self>) {
@@ -182,16 +179,24 @@ impl RequestPanel {
 
         let client = cx.http_client();
         let id_clone = id.clone();
+        // Snapshot the actually-sent request (post-substitution) before
+        // `prepared` is moved into the task, so the "实际请求" tab can show
+        // the real request regardless of the outcome.
+        let actual_request = prepared.request_text();
+        let actual_curl = prepared.to_curl();
         // Clear any previous response and mark "请求中" so the realtime panel
         // doesn't show stale content (body/status/time/size) while the request
         // is in flight. Mirrors the streaming branches' placeholder seeding;
         // `streaming` stays false because HTTP sends aren't user-cancellable.
+        // The actual-request snapshot rides along so it is visible in-flight.
         self.state.update(cx, |s, cx| {
             s.sending = Some(id.clone());
             if let Some(project) = s.active_project_mut() {
                 if let Some((_, r)) = project.find_request_mut(&id) {
                     r.last_response = Some(Response {
                         status_text: "请求中…".into(),
+                        actual_request: Some(actual_request.clone()),
+                        actual_curl: Some(actual_curl.clone()),
                         ..Default::default()
                     });
                 }
@@ -205,6 +210,8 @@ impl RequestPanel {
             .and_then(|p| p.active_environment.clone());
         cx.spawn(async move |this, cx| {
             let mut resp = http::execute(client.as_ref(), prepared, 30).await;
+            resp.actual_request = Some(actual_request);
+            resp.actual_curl = Some(actual_curl);
 
             // --- Post-request / Tests script (PRD §5.2): reads `response`,
             //     extracts data (e.g. token) into variables, runs assertions.
@@ -409,6 +416,10 @@ impl RequestPanel {
         let client = cx.http_client();
         let stop = register_stop(&id);
         let id_clone = id.clone();
+        // Snapshot the actually-sent request before `prepared` is moved into
+        // the stream future (see the HTTP branch for rationale).
+        let actual_request = prepared.request_text();
+        let actual_curl = prepared.to_curl();
         self.state.update(cx, |s, _cx| s.sending = Some(id.clone()));
 
         cx.spawn(async move |this, cx| {
@@ -420,6 +431,8 @@ impl RequestPanel {
                             r.last_response = Some(Response {
                                 status_text: "SSE 流式接收中…".into(),
                                 streaming: true,
+                                actual_request: Some(actual_request.clone()),
+                                actual_curl: Some(actual_curl.clone()),
                                 ..Default::default()
                             });
                         }
@@ -481,6 +494,8 @@ impl RequestPanel {
                     ..Default::default()
                 },
             };
+            resp.actual_request = Some(actual_request);
+            resp.actual_curl = Some(actual_curl);
             // Append script logs.
             if !script_logs.is_empty() {
                 resp.body.push_str("\n\n// ── 预执行脚本输出 ──\n");
@@ -868,7 +883,12 @@ impl RequestPanel {
     }
 
     /// gRPC / Socket.IO placeholder (only for unimplemented edge cases).
-    pub(super) fn send_placeholder(&mut self, id: String, protocol: Protocol, cx: &mut Context<Self>) {
+    pub(super) fn send_placeholder(
+        &mut self,
+        id: String,
+        protocol: Protocol,
+        cx: &mut Context<Self>,
+    ) {
         let name = protocol.to_string();
         let placeholder_resp = Response {
             status_text: name.clone(),

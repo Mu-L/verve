@@ -476,6 +476,8 @@ The Community Edition keeps improving too. This is a transparent log of what has
 
 > Last updated: 2026-08
 
+- **Accurate curl commands** — "Copy as cURL" (project-tree context menu) now reflects the request that was actually sent: variables substituted, query params appended, base URL joined, headers/body/auth included.
+- **"实际请求" (actual request) tab** — the response panel shows exactly what went on the wire, as a readable text block plus an executable curl command.
 - **Windows titlebar fixed (issue #2)** — the window chrome is now drawn by gpui-component's `TitleBar`: the bar is a drag region and Windows/Linux get min/max/close buttons. Previously the Windows build opened with no titlebar at all.
 - **`{{variable}}` auto-completion** — typing `{{` in the URL, KV value, or base-URL inputs opens an LSP-style completion popover listing global + environment variables (plus dynamic ones like `$random`) with scope badges, filtering as you type.
 - **Variable rename sync** — renaming an environment/global variable key rewrites every `{{oldKey}}` reference across requests, folders, params/headers/cookies, and base-URL overrides automatically.
