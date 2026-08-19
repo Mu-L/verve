@@ -2,6 +2,18 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.5.10] - 2026-08-19
+
+### 🐛 Fixes (synced from upstream)
+
+- **Title-bar buttons clickable on Windows** — the `TitleBar` drag region made
+  plain buttons (rail/sidebar toggle, share, sync, import, update check, and
+  the JSON toolbar) unclickable on Windows: the OS window-drag loop consumed
+  their mouse-up. Each control is now wrapped in an occluding hitbox so the
+  click completes; dragging empty parts of the bar still works.
+- **Center within the work area** — windows now center on the visible work
+  area (`centered_at`), no longer slightly overlapping the Dock / taskbar.
+
 ## [0.5.9] - 2026-08-19
 
 ### 🔧 Enhancements & Fixes (synced from upstream)

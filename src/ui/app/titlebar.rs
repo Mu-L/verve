@@ -15,6 +15,25 @@ use gpui::{img, *};
 use gpui_component::{ActiveTheme, Disableable as _, Icon, IconName, Selectable as _, Sizable as _, TitleBar, WindowExt,
                      button::{Button, ButtonVariants as _}, h_flex, popover::Popover, v_flex};
 
+/// Wrap a plain title-bar control so it can receive clicks on Windows.
+///
+/// The gpui-component `TitleBar` marks the whole bar as a window drag region
+/// (`WindowControlArea::Drag`). On Windows, `WM_NCHITTEST` then answers
+/// `HTCAPTION` over the bar, and a mouse-down that no handler claims falls
+/// through to `DefWindowProc`'s window-drag loop, which consumes the
+/// mouse-up — so a plain `Button`'s `on_click` never fires (its down handler
+/// deliberately does not stop propagation). macOS is unaffected because its
+/// drag path runs inside gpui, and popover triggers already stop propagation
+/// on mouse-down, which is why only plain buttons break.
+///
+/// An occluding hitbox stops the window-control hit test at the control: the
+/// drag region no longer covers it, the OS treats the spot as a normal
+/// client area, and the click completes. Dragging the empty parts of the bar
+/// still works.
+fn title_bar_control(id: &'static str, el: impl IntoElement) -> impl IntoElement {
+    div().id(id).occlude().child(el)
+}
+
 impl VerveApp {
     pub(super) fn render_title_bar(&mut self, cx: &mut Context<Self>) -> gpui::AnyElement {
         let theme = cx.theme().clone();
@@ -85,7 +104,8 @@ impl VerveApp {
             // Far-left activity rail collapse/expand toggle.
             .child(self.render_rail_toggle(cx))
             // Sidebar (tree) collapse/expand toggle.
-            .child(
+            .child(title_bar_control(
+                "sidebar-toggle-hitbox",
                 Button::new("sidebar-toggle")
                     .ghost()
                     .small()
@@ -104,7 +124,7 @@ impl VerveApp {
                         this.sidebar_collapsed = !this.sidebar_collapsed;
                         cx.notify();
                     })),
-            )
+            ))
             // Workspace switcher — lists all workspaces, allows switching,
             // creating, and deleting (except the default).
             .child(
@@ -317,7 +337,8 @@ impl VerveApp {
                     ),
             )
             // Share the whole project's docs (scope = Project).
-            .child(
+            .child(title_bar_control(
+                "share-project-hitbox",
                 Button::new("share-project")
                     .ghost()
                     .small()
@@ -334,7 +355,7 @@ impl VerveApp {
                             );
                         },
                     )),
-            )
+            ))
             .child(div().flex_1())
             // Environment switcher — a popover listing environments plus
             // management entries (环境管理/Cookie/全局参数/全局变量/新建).
@@ -496,7 +517,8 @@ impl VerveApp {
                 h_flex()
                     .gap_1()
                     .items_center()
-                    .child(
+                    .child(title_bar_control(
+                        "sync-hitbox",
                         Button::new("sync")
                             .ghost()
                             .small()
@@ -518,7 +540,7 @@ impl VerveApp {
                                     g.sync_async(None, cx)
                                 });
                             })),
-                    )
+                    ))
                     // Transient result chip: green ✓ on success, red message on
                     // failure. Dismissable via the × control.
                     .when_some(last_result, |col, (msg, ok)| {
@@ -557,7 +579,8 @@ impl VerveApp {
                         )
                     })
             })
-            .child(
+            .child(title_bar_control(
+                "import-hitbox",
                 Button::new("import")
                     .ghost()
                     .small()
@@ -566,7 +589,7 @@ impl VerveApp {
                     .on_click(cx.listener(|this, _, _, cx| {
                         this.import_collection(cx);
                     })),
-            )
+            ))
             .child(self.render_export_picker(cx))
             // Update check button: shows a spinner while checking, a download
             // icon when an update is available, or a refresh icon otherwise.
@@ -576,24 +599,27 @@ impl VerveApp {
     }
 
     pub(super) fn render_rail_toggle(&self, cx: &Context<Self>) -> impl IntoElement {
-        Button::new("rail-toggle")
-            .ghost()
-            .small()
-            .icon(if self.rail_collapsed {
-                IconName::PanelLeftOpen
-            } else {
-                IconName::PanelLeftClose
-            })
-            .selected(!self.rail_collapsed)
-            .tooltip(if self.rail_collapsed {
-                "展开左侧导航栏"
-            } else {
-                "收起左侧导航栏"
-            })
-            .on_click(cx.listener(|this, _, _, cx| {
-                this.rail_collapsed = !this.rail_collapsed;
-                cx.notify();
-            }))
+        title_bar_control(
+            "rail-toggle-hitbox",
+            Button::new("rail-toggle")
+                .ghost()
+                .small()
+                .icon(if self.rail_collapsed {
+                    IconName::PanelLeftOpen
+                } else {
+                    IconName::PanelLeftClose
+                })
+                .selected(!self.rail_collapsed)
+                .tooltip(if self.rail_collapsed {
+                    "展开左侧导航栏"
+                } else {
+                    "收起左侧导航栏"
+                })
+                .on_click(cx.listener(|this, _, _, cx| {
+                    this.rail_collapsed = !this.rail_collapsed;
+                    cx.notify();
+                })),
+        )
     }
 
     pub(super) fn render_update_button(&self, cx: &Context<Self>) -> impl IntoElement {
@@ -614,19 +640,22 @@ impl VerveApp {
         } else {
             "检查更新".to_string()
         };
-        Button::new("update-check")
-            .ghost()
-            .small()
-            .icon(icon)
-            .tooltip(tooltip)
-            .when(checking, |b| b.disabled(true))
-            .on_click(cx.listener(move |this, _ev, window, cx| {
-                if this.update_info.is_some() {
-                    this.open_update_download(window, cx);
-                } else {
-                    this.check_updates_manual(window, cx);
-                }
-            }))
+        title_bar_control(
+            "update-check-hitbox",
+            Button::new("update-check")
+                .ghost()
+                .small()
+                .icon(icon)
+                .tooltip(tooltip)
+                .when(checking, |b| b.disabled(true))
+                .on_click(cx.listener(move |this, _ev, window, cx| {
+                    if this.update_info.is_some() {
+                        this.open_update_download(window, cx);
+                    } else {
+                        this.check_updates_manual(window, cx);
+                    }
+                })),
+        )
     }
 
     pub(super) fn render_export_picker(&self, cx: &Context<Self>) -> impl IntoElement {
@@ -793,57 +822,72 @@ impl VerveApp {
             // Toolbar buttons that trigger actions on the json panel
             .child({
                 let json = self.json.clone();
-                Button::new("json-title-format")
-                    .small()
-                    .ghost()
-                    .icon(IconName::Check)
-                    .label(rust_i18n::t!("json.format_btn").to_string())
-                    .on_click(cx.listener(move |_, _, _, cx| {
-                        let _ = json.update(cx, |panel, cx| panel.format_from_title(cx));
-                    }))
+                title_bar_control(
+                    "json-title-format-hitbox",
+                    Button::new("json-title-format")
+                        .small()
+                        .ghost()
+                        .icon(IconName::Check)
+                        .label(rust_i18n::t!("json.format_btn").to_string())
+                        .on_click(cx.listener(move |_, _, _, cx| {
+                            let _ = json.update(cx, |panel, cx| panel.format_from_title(cx));
+                        })),
+                )
             })
             .child({
                 let json = self.json.clone();
                 let active = json.read(cx).is_compact_active();
-                Button::new("json-title-compact")
-                    .small()
-                    .ghost()
-                    .label(rust_i18n::t!("json.compact_btn").to_string())
-                    .when(active, |b| b.selected(true))
-                    .on_click(cx.listener(move |_, _, _, cx| {
-                        let _ = json.update(cx, |panel, cx| panel.toggle_compact(cx));
-                    }))
+                title_bar_control(
+                    "json-title-compact-hitbox",
+                    Button::new("json-title-compact")
+                        .small()
+                        .ghost()
+                        .label(rust_i18n::t!("json.compact_btn").to_string())
+                        .when(active, |b| b.selected(true))
+                        .on_click(cx.listener(move |_, _, _, cx| {
+                            let _ = json.update(cx, |panel, cx| panel.toggle_compact(cx));
+                        })),
+                )
             })
             .child({
                 let json = self.json.clone();
-                Button::new("json-title-expand")
-                    .small()
-                    .ghost()
-                    .label(rust_i18n::t!("json.expand_all").to_string())
-                    .on_click(cx.listener(move |_, _, _, cx| {
-                        let _ = json.update(cx, |panel, cx| panel.expand_all(cx));
-                    }))
+                title_bar_control(
+                    "json-title-expand-hitbox",
+                    Button::new("json-title-expand")
+                        .small()
+                        .ghost()
+                        .label(rust_i18n::t!("json.expand_all").to_string())
+                        .on_click(cx.listener(move |_, _, _, cx| {
+                            let _ = json.update(cx, |panel, cx| panel.expand_all(cx));
+                        })),
+                )
             })
             .child({
                 let json = self.json.clone();
-                Button::new("json-title-collapse")
-                    .small()
-                    .ghost()
-                    .label(rust_i18n::t!("json.collapse_all").to_string())
-                    .on_click(cx.listener(move |_, _, _, cx| {
-                        let _ = json.update(cx, |panel, cx| panel.collapse_all(cx));
-                    }))
+                title_bar_control(
+                    "json-title-collapse-hitbox",
+                    Button::new("json-title-collapse")
+                        .small()
+                        .ghost()
+                        .label(rust_i18n::t!("json.collapse_all").to_string())
+                        .on_click(cx.listener(move |_, _, _, cx| {
+                            let _ = json.update(cx, |panel, cx| panel.collapse_all(cx));
+                        })),
+                )
             })
             .child({
                 let json = self.json.clone();
-                Button::new("json-title-copy")
-                    .small()
-                    .ghost()
-                    .icon(IconName::Copy)
-                    .label(rust_i18n::t!("json.copy_btn").to_string())
-                    .on_click(cx.listener(move |_, _, _, cx| {
-                        let _ = json.update(cx, |panel, cx| panel.copy_result(cx));
-                    }))
+                title_bar_control(
+                    "json-title-copy-hitbox",
+                    Button::new("json-title-copy")
+                        .small()
+                        .ghost()
+                        .icon(IconName::Copy)
+                        .label(rust_i18n::t!("json.copy_btn").to_string())
+                        .on_click(cx.listener(move |_, _, _, cx| {
+                            let _ = json.update(cx, |panel, cx| panel.copy_result(cx));
+                        })),
+                )
             })
             .child(self.render_update_button(cx))
             .child(self.render_lang_picker(cx))

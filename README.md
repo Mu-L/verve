@@ -477,7 +477,7 @@ The Community Edition keeps improving too. This is a transparent log of what has
 > Last updated: 2026-08
 
 - **Rail-switch shortcuts** — ⌘/Ctrl + 1..=5 jump to the daily-workflow views (API / Mock / JSON / Proxy / Hosts); rail tooltips show the shortcut.
-- **Windows fit-and-finish** — windows are clamped to the display work area (no more off-screen windows on high-DPI), and the main-thread stack reserve is raised to 16MB (fixes render-frame stack overflows).
+- **Windows fit-and-finish** — windows are clamped to the display work area and centered within it (no more off-screen windows on high-DPI, no Dock/taskbar overlap), title-bar buttons are clickable (the drag region no longer swallows their clicks), and the main-thread stack reserve is raised to 16MB (fixes render-frame stack overflows).
 - **Git sync fixes** — tree paths use `/` separators (Windows syncs used to fail validation), and auto-sync only runs when git auto-commit is explicitly enabled.
 - **Accurate curl commands** — "Copy as cURL" (project-tree context menu) now reflects the request that was actually sent: variables substituted, query params appended, base URL joined, headers/body/auth included.
 - **"实际请求" (actual request) tab** — the response panel shows exactly what went on the wire, as a readable text block plus an executable curl command.
