@@ -2,6 +2,26 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.5.9] - 2026-08-19
+
+### 🔧 Enhancements & Fixes (synced from upstream)
+
+- **Rail-switch shortcuts** — ⌘/Ctrl + 1..=5 now jump to the fixed daily-workflow
+  views (API / Mock / JSON / Proxy / Hosts). A one-time rail reorder puts the
+  shortcut views at the front of the saved order (runs once; drag-to-reorder
+  afterwards is preserved), and rail tooltips show each view's shortcut.
+- **Window clamped to work area** — windows are centered with their logical
+  size clamped to the display's visible bounds first. Fixes the Windows
+  high-DPI case (e.g. 150% scale) where the fixed 1400×900 main window opened
+  partly off-screen.
+- **Windows stack reserve raised to 16MB** — the MSVC default 1MB main-thread
+  stack overflows (0xc000041d) on deep GPUI render frames; the linker flag now
+  matches macOS/Linux headroom (`.cargo/config.toml`).
+- **Git sync fixes** — tree paths use `/` separators (Windows `\` made every
+  sync commit fail gix validation), and auto-sync now requires the user to
+  have actually enabled git auto-commit in settings instead of syncing the
+  auto-created repo on first run.
+
 ## [0.5.8] - 2026-08-17
 
 ### 🔧 Enhancements (synced from upstream)

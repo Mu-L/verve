@@ -476,6 +476,9 @@ The Community Edition keeps improving too. This is a transparent log of what has
 
 > Last updated: 2026-08
 
+- **Rail-switch shortcuts** — ⌘/Ctrl + 1..=5 jump to the daily-workflow views (API / Mock / JSON / Proxy / Hosts); rail tooltips show the shortcut.
+- **Windows fit-and-finish** — windows are clamped to the display work area (no more off-screen windows on high-DPI), and the main-thread stack reserve is raised to 16MB (fixes render-frame stack overflows).
+- **Git sync fixes** — tree paths use `/` separators (Windows syncs used to fail validation), and auto-sync only runs when git auto-commit is explicitly enabled.
 - **Accurate curl commands** — "Copy as cURL" (project-tree context menu) now reflects the request that was actually sent: variables substituted, query params appended, base URL joined, headers/body/auth included.
 - **"实际请求" (actual request) tab** — the response panel shows exactly what went on the wire, as a readable text block plus an executable curl command.
 - **Windows titlebar fixed (issue #2)** — the window chrome is now drawn by gpui-component's `TitleBar`: the bar is a drag region and Windows/Linux get min/max/close buttons. Previously the Windows build opened with no titlebar at all.
@@ -501,6 +504,10 @@ The Pro Edition ships new work almost every day. This section is a transparent l
 
 > Last updated: 2026-08
 
+### 🆘 App-wide
+
+- **Searchable help center** — a built-in help center (⌘/ / F1) covering every view and keyboard shortcut, including the user's custom shortcut overrides (the same table that registers the real bindings); searchable, with Esc-aware view switching.
+
 ### 🔐 SSH Terminal
 
 - **MFA / 2FA authentication** — new `keyboard-interactive` auth type for TOTP / OTP / hardware-key servers. The verification code is prompted dynamically at connect time, and "password + OTP" pairing is supported (account password first, then the OTP).
@@ -515,7 +522,7 @@ The Pro Edition ships new work almost every day. This section is a transparent l
 - **Full-text search** — notes are indexed with a tantivy inverted index for instant keyword search across the whole notebook.
 - **Media storage (local + S3)** — images and videos embedded in notes are stored locally or pushed to S3, with a cleanup module for orphaned media. The media root folder can now be picked from a native directory browser.
 - **Notes scale & loading** — optimized load algorithm, an original-file management mechanism, node move, tab collapse, live word count (with a fixed word-count edge case), and auto-expand of long text on focus.
-- **Editor performance** — reduced per-frame CPU via word-count throttling, render-cache reuse, and lighter window bookkeeping; markdown/notes scrolling is now smoother, with further per-frame hot-path costs eliminated in notes/markdown rendering.
+- **Editor performance** — reduced per-frame CPU via word-count throttling (now cached per content version), render-cache reuse, block rows windowed once measured instead of full re-mounting, and row strides re-measured after viewport width changes; markdown/notes scrolling is now smoother.
 - **Markdown paste fix** — fixed a bug where pasting formatted Markdown rendered ordered-list numbering incorrectly.
 - **PDF export overhaul** — switched to a new PDF export engine.
 - **Markdown rendering** — multiple rounds of rendering refinements.

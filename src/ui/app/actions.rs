@@ -1,7 +1,9 @@
 //! Keybinding action handlers. Wired via `on_action` in the root Render.
+//!
+//! Also rail-view switching (⌘/Ctrl + 1..=5).
 
 use gpui::{img, *};
-use super::{CloseFile, SaveWorkspace, VerveApp};
+use super::{CloseFile, SaveWorkspace, SelectRailSlot, SideView, VerveApp};
 
 impl VerveApp {
     /// cmd-s — save. Persists the workspace to disk immediately (bypassing the
@@ -14,6 +16,24 @@ impl VerveApp {
     ) {
         self.state.update(cx, |s, cx| s.persist(cx));
         cx.notify();
+    }
+
+    /// ⌘/Ctrl + 1..=5 — switch to one of the fixed shortcut views. The
+    /// bindings carry a "!BlockEditor" context so deeper-focused bindings win
+    /// while a block editor is focused. Hidden rails are skipped.
+    pub(super) fn on_select_rail_slot(
+        &mut self,
+        a: &SelectRailSlot,
+        w: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(&view) = SideView::SHORTCUT_VIEWS.get(a.0) else {
+            return;
+        };
+        if self.hidden_rails.contains(view.name()) {
+            return;
+        }
+        self.activate_view(view, w, cx);
     }
 
     /// cmd-w — close the active file/tab. In the Community Edition only the API

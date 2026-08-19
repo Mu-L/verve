@@ -53,7 +53,7 @@ fn main() {
 
         if is_first_run {
             log::info!("First run detected, showing bootstrap dialog");
-            let bounds = Bounds::centered(None, size(px(560.), px(560.)), cx);
+            let bounds = ui::app::centered_window_bounds(px(560.), px(560.), cx);
             cx.spawn(async move |cx| {
                 cx.open_window(
                     WindowOptions {
@@ -96,6 +96,7 @@ fn launch_main_app(cx: &mut App) {
         // Close the active request tab (cmd-w).
         KeyBinding::new("cmd-w", ui::app::CloseFile, None),
     ]);
+    cx.bind_keys(ui::app::rail_slot_keybindings("cmd"));
     #[cfg(not(target_os = "macos"))]
     cx.bind_keys([
         KeyBinding::new("ctrl-enter", ui::request_panel::SendRequest, None),
@@ -103,8 +104,9 @@ fn launch_main_app(cx: &mut App) {
         KeyBinding::new("ctrl-shift-n", ui::app::NewRequest, None),
         KeyBinding::new("ctrl-w", ui::app::CloseFile, None),
     ]);
+    cx.bind_keys(ui::app::rail_slot_keybindings("ctrl"));
 
-    let bounds = Bounds::centered(None, size(px(1400.), px(900.)), cx);
+    let bounds = ui::app::centered_window_bounds(px(1400.), px(900.), cx);
 
     cx.spawn(async move |cx| {
         cx.open_window(

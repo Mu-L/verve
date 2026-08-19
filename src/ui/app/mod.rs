@@ -12,6 +12,61 @@ actions!(
         CloseFile,
     ]
 );
+
+/// Switch to one of the fixed shortcut views (payload indexes
+/// `SideView::SHORTCUT_VIEWS`). This rev of gpui's `actions!` macro only
+/// defines unit actions, so data-carrying actions are declared via the
+/// derive; `no_json` because it only originates from in-code keybindings,
+/// never from JSON.
+#[derive(Clone, PartialEq, Debug, gpui::Action)]
+#[action(namespace = verve, no_json)]
+pub struct SelectRailSlot(pub usize);
+
+/// Keybindings for the rail switcher: ⌘/Ctrl + 1..=N switch to the Nth of
+/// `SideView::SHORTCUT_VIEWS` (the commonly-used views).
+///
+/// Context "!BlockEditor": a context-less binding ties with the deepest key
+/// context and could shadow deeper-focused bindings; with the negated
+/// context, more specific bindings win while a block editor is focused.
+pub fn rail_slot_keybindings(modifier: &str) -> Vec<KeyBinding> {
+    SideView::SHORTCUT_VIEWS
+        .iter()
+        .enumerate()
+        .map(|(i, _)| {
+            KeyBinding::new(
+                &format!("{}-{}", modifier, i + 1),
+                SelectRailSlot(i),
+                Some("!BlockEditor"),
+            )
+        })
+        .collect()
+}
+
+/// Center a window of the requested logical size on the primary display,
+/// clamping the size to the display's visible (work-area) bounds first.
+///
+/// Without the clamp, a fixed logical size (e.g. 1400×900) exceeds the
+/// physical screen on high-DPI Windows scales (150% → 2100×1350 physical
+/// pixels on a 1920×1080 panel), so the "centered" window lands partly
+/// off-screen / at the top-left corner and must be dragged into view.
+pub fn centered_window_bounds(width: Pixels, height: Pixels, cx: &App) -> Bounds<Pixels> {
+    let size = match cx.primary_display() {
+        Some(display) => {
+            let visible = display.visible_bounds();
+            // Small margin so the window never touches the screen edges;
+            // never shrink below a usable floor for tiny screens.
+            let margin = px(24.);
+            let floor = gpui::size(px(320.), px(240.));
+            let avail = gpui::size(
+                (visible.size.width - margin).max(floor.width),
+                (visible.size.height - margin).max(floor.height),
+            );
+            gpui::size(width.min(avail.width), height.min(avail.height))
+        }
+        None => gpui::size(width, height),
+    };
+    Bounds::centered(None, size, cx)
+}
 use crate::assets::{
     BRACES, BRACES_JSON, DOCS, EXPORT, HISTORY, IMPORT, REFRESH_CW, SAVE, SAVE_AS, SERVER, SHARE,
 };
@@ -232,6 +287,17 @@ impl SideView {
         SideView::History,
     ];
 
+    /// The daily-workflow views with fixed ⌘/Ctrl+1..=5 rail-switch shortcuts,
+    /// in key order. Mirrors the Community Edition's positioning (HTTP
+    /// debugging, mock, JSON, capture, hosts).
+    pub const SHORTCUT_VIEWS: &'static [SideView] = &[
+        SideView::Api,
+        SideView::Mock,
+        SideView::JsonFormat,
+        SideView::Proxy,
+        SideView::Hosts,
+    ];
+
     /// A stable string key for persistence.
     pub fn name(self) -> &'static str {
         match self {
@@ -360,8 +426,7 @@ impl Render for VerveApp {
                 PendingDialog::Environments => {
                     let state = self.state.clone();
                     cx.defer(move |cx| {
-                        let bounds =
-                            gpui::Bounds::centered(None, gpui::size(px(960.), px(620.)), cx);
+                        let bounds = centered_window_bounds(px(960.), px(620.), cx);
                         let _ = cx.open_window(
                             gpui::WindowOptions {
                                 window_bounds: Some(gpui::WindowBounds::Windowed(bounds)),
@@ -392,8 +457,7 @@ impl Render for VerveApp {
                 PendingDialog::Settings => {
                     let state = self.state.clone();
                     cx.defer(move |cx| {
-                        let bounds =
-                            gpui::Bounds::centered(None, gpui::size(px(720.), px(560.)), cx);
+                        let bounds = centered_window_bounds(px(720.), px(560.), cx);
                         let _ = cx.open_window(
                             gpui::WindowOptions {
                                 window_bounds: Some(gpui::WindowBounds::Windowed(bounds)),
@@ -579,6 +643,7 @@ impl Render for VerveApp {
             .text_color(theme.foreground)
             .on_action(cx.listener(Self::on_save_workspace))
             .on_action(cx.listener(Self::on_close_file))
+            .on_action(cx.listener(Self::on_select_rail_slot))
             .child(self.render_title_bar(cx))
             .child(
                 h_flex()
