@@ -1,20 +1,20 @@
 //! Request-tab rendering: the active-tab body (params/headers/body/scripts/docs),
 //! the mock tab, and the auth tab.
-use std::collections::BTreeMap;
-use std::sync::Arc;
+use super::{ReqTab, RequestPanel};
+use crate::state::models::*;
+use crate::ui::kv_table::KvRow;
 use gpui::prelude::FluentBuilder as _;
 use gpui::*;
-use gpui_component::Icon;
 use gpui_component::WindowExt as _;
-use gpui_component::input::{Input, InputEvent, InputState};
-use gpui_component::select::{Select, SelectEvent, SelectState};
-use gpui_component::{ActiveTheme, Disableable as _, IconName, Selectable as _, Sizable as _, button::{Button, ButtonVariants as _}, checkbox::Checkbox, h_flex, popover::Popover, v_flex};
-use crate::http;
-use crate::state::models::*;
-use crate::state::{AppEvent, AppState};
-use crate::ui::kv_table::{self, KvRow};
-use super::folder_helpers::*;
-use super::{RequestPanel, ReqTab, FolderKvSection, FolderTab};
+use gpui_component::input::{Input, InputState};
+use gpui_component::select::Select;
+use gpui_component::{
+    ActiveTheme, Disableable as _, IconName, Selectable as _, Sizable as _,
+    button::{Button, ButtonVariants as _},
+    h_flex,
+    v_flex,
+};
+use std::sync::Arc;
 
 impl RequestPanel {
     pub(super) fn render_active_tab(
@@ -130,7 +130,39 @@ impl RequestPanel {
                                                         this.body_visual_mode = true;
                                                         cx.notify();
                                                     })),
-                                            ),
+                                            )
+                                            // Built-in JSON actions for the code editor
+                                            // (the visual table has no raw text to format).
+                                            .when(!visual, |bar| {
+                                                bar.child(
+                                                    Button::new("body-json-format")
+                                                        .ghost()
+                                                        .xsmall()
+                                                        .label("格式化")
+                                                        .tooltip("美化 JSON 缩进")
+                                                        .on_click(cx.listener(
+                                                            |this, _, window, cx| {
+                                                                this.transform_json_body(
+                                                                    false, window, cx,
+                                                                );
+                                                            },
+                                                        )),
+                                                )
+                                                .child(
+                                                    Button::new("body-json-simplify")
+                                                        .ghost()
+                                                        .xsmall()
+                                                        .label("简化")
+                                                        .tooltip("每个数组仅保留首项（递归）")
+                                                        .on_click(cx.listener(
+                                                            |this, _, window, cx| {
+                                                                this.transform_json_body(
+                                                                    true, window, cx,
+                                                                );
+                                                            },
+                                                        )),
+                                                )
+                                            }),
                                     )
                                 })
                                 .child(if visual {
@@ -826,5 +858,4 @@ impl RequestPanel {
                     .into_any_element(),
             })
     }
-
 }

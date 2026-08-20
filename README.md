@@ -476,6 +476,10 @@ The Community Edition keeps improving too. This is a transparent log of what has
 
 > Last updated: 2026-08
 
+- **JSON editing upgrades** — delete any property (object key / array element / whole subtree) directly from the formatted view with order preserved; Format & Simplify actions built into the Raw-JSON request-body editor.
+- **Smarter copy-as-curl** — bodies use the portable `-d` flag (works on old curl), and globals/dynamic variables are merged exactly like the real send path.
+- **Response receive time** in the status bar, and the actual-request tab is now a copyable code editor.
+- **Linux window fixes** — no more double close buttons (client-side decorations), settings windows centered as dialogs, and the first-run wizard no longer opens behind the main window.
 - **Rail-switch shortcuts** — ⌘/Ctrl + 1..=5 jump to the daily-workflow views (API / Mock / JSON / Proxy / Hosts); rail tooltips show the shortcut.
 - **Windows fit-and-finish** — windows are clamped to the display work area and centered within it (no more off-screen windows on high-DPI, no Dock/taskbar overlap), title-bar buttons are clickable (the drag region no longer swallows their clicks), and the main-thread stack reserve is raised to 16MB (fixes render-frame stack overflows).
 - **Git sync fixes** — tree paths use `/` separators (Windows syncs used to fail validation), and auto-sync only runs when git auto-commit is explicitly enabled.

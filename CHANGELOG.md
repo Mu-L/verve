@@ -2,6 +2,39 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.5.11] - 2026-08-20
+
+### 🔧 Enhancements (synced from upstream)
+
+- **JSON format panel: delete any property** — a per-row delete button removes
+  an object key, array element, or whole subtree from the formatted view; the
+  trimmed document syncs back to the input with key order preserved
+  (`serde_json` preserve_order) and expansion state repaired.
+- **Request body editor: Format / Simplify** — built-in toolbar actions in the
+  Raw-JSON code editor: pretty-print in place, or recursively keep only the
+  first item of every array (same rule as the JSON panel's compact mode).
+- **Portable curl `-d`** — copy-as-curl emits request bodies with the
+  long-supported `-d` flag instead of `--data-raw` (curl 7.43+), so old curl
+  versions work.
+- **Accurate curl globals** — curl generation (preview tab + project-tree
+  action) merges project-global params/headers/cookies before variable
+  substitution, mirroring the real send path.
+- **Actual-request tab** — renders as a selectable/copyable code editor with a
+  one-click copy button.
+- **Response receive time** — the status bar shows when each response arrived
+  (`YYYY-MM-DD HH:mm`), stamped per protocol.
+
+### 🐛 Fixes (synced from upstream)
+
+- **Linux double close buttons** — client-side decorations remove the WM title
+  bar that stacked a second close button over the drawn controls; settings
+  windows open as dialogs so the WM centers them over the main window. Also
+  bumps gpui-component to the `verve-fork-v2` rev carrying the TitleBar
+  server-side-decoration fix.
+- **First-run welcome z-order** — the main window now opens before the welcome
+  dialog, which is explicitly activated afterwards, so the wizard is no longer
+  buried behind the main window on Windows/Linux.
+
 ## [0.5.10] - 2026-08-19
 
 ### 🐛 Fixes (synced from upstream)

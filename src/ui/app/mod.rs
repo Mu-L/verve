@@ -65,6 +65,32 @@ pub fn centered_window_bounds(width: Pixels, height: Pixels, cx: &App) -> Bounds
     // center and the window's bottom edge slightly overlaps it.
     Bounds::centered_at(visible.center(), size)
 }
+
+/// Apply Verve's windowing conventions to a self-chromed OS window (one that
+/// renders the gpui-component `TitleBar` with drawn min/max/close controls).
+///
+/// * `window_decorations: Client` — the TitleBar draws its own controls on
+///   every non-macOS platform unconditionally, while gpui otherwise asks
+///   the Linux WM for server-side decorations by default; the WM's title
+///   bar then stacks a *second* close button on top of ours. Client-side
+///   decorations remove the WM chrome (X11: Motif undecorated hints;
+///   Wayland: xdg-decoration client mode). Windows/macOS ignore this field,
+///   so it is set unconditionally.
+/// * `kind: Dialog` (Linux only, when `dialog`) — dialog-type toplevels are
+///   centered over and kept above their transient parent (the focused main
+///   window) by the WM/compositor, which programmatic bounds cannot
+///   achieve: Wayland clients cannot position themselves at all, and X11
+///   WMs re-place untyped windows. Only the settings-family windows pass
+///   `dialog = true`.
+pub fn apply_window_chrome_fixes(options: &mut gpui::WindowOptions, dialog: bool) {
+    options.window_decorations = Some(gpui::WindowDecorations::Client);
+    #[cfg(target_os = "linux")]
+    if dialog {
+        options.kind = gpui::WindowKind::Dialog;
+    }
+    #[cfg(not(target_os = "linux"))]
+    let _ = dialog;
+}
 use crate::assets::{
     BRACES, BRACES_JSON, DOCS, EXPORT, HISTORY, IMPORT, REFRESH_CW, SAVE, SAVE_AS, SERVER, SHARE,
 };
@@ -425,14 +451,16 @@ impl Render for VerveApp {
                     let state = self.state.clone();
                     cx.defer(move |cx| {
                         let bounds = centered_window_bounds(px(960.), px(620.), cx);
+                        let mut options = gpui::WindowOptions {
+                            window_bounds: Some(gpui::WindowBounds::Windowed(bounds)),
+                            window_min_size: Some(gpui::size(px(820.), px(520.))),
+                            titlebar: None,
+                            is_minimizable: true,
+                            ..Default::default()
+                        };
+                        apply_window_chrome_fixes(&mut options, true);
                         let _ = cx.open_window(
-                            gpui::WindowOptions {
-                                window_bounds: Some(gpui::WindowBounds::Windowed(bounds)),
-                                window_min_size: Some(gpui::size(px(820.), px(520.))),
-                                titlebar: None,
-                                is_minimizable: true,
-                                ..Default::default()
-                            },
+                            options,
                             |window, cx| {
                                 let view = cx.new(|cx| {
                                     crate::ui::settings_window::SettingsWindow::new(
@@ -456,14 +484,16 @@ impl Render for VerveApp {
                     let state = self.state.clone();
                     cx.defer(move |cx| {
                         let bounds = centered_window_bounds(px(720.), px(560.), cx);
+                        let mut options = gpui::WindowOptions {
+                            window_bounds: Some(gpui::WindowBounds::Windowed(bounds)),
+                            window_min_size: Some(gpui::size(px(600.), px(440.))),
+                            titlebar: None,
+                            is_minimizable: true,
+                            ..Default::default()
+                        };
+                        apply_window_chrome_fixes(&mut options, true);
                         let _ = cx.open_window(
-                            gpui::WindowOptions {
-                                window_bounds: Some(gpui::WindowBounds::Windowed(bounds)),
-                                window_min_size: Some(gpui::size(px(600.), px(440.))),
-                                titlebar: None,
-                                is_minimizable: true,
-                                ..Default::default()
-                            },
+                            options,
                             |window, cx| {
                                 let view = cx.new(|cx| {
                                     crate::ui::settings_window::SettingsWindow::new(

@@ -153,6 +153,7 @@ impl RequestPanel {
             Err(e) => {
                 let err_resp = Response {
                     error: Some(format!("{e}")),
+                    received_at: Some(Response::now_stamp()),
                     ..Default::default()
                 };
                 self.state.update(cx, |s, _cx| {
@@ -491,6 +492,7 @@ impl RequestPanel {
                 Ok(r) => r,
                 Err(e) => crate::state::models::Response {
                     error: Some(format!("{e}")),
+                    received_at: Some(Response::now_stamp()),
                     ..Default::default()
                 },
             };
@@ -603,6 +605,7 @@ impl RequestPanel {
                                 resp.streaming = false;
                                 resp.body = log.clone();
                                 resp.size = log.len() as u64;
+                                resp.received_at = Some(Response::now_stamp());
                             }
                             // Clone the response and apply autosave separately to avoid double-borrow.
                             if let Some(resp) = r.last_response.clone() {
@@ -703,6 +706,7 @@ impl RequestPanel {
                                 resp.streaming = false;
                                 resp.body = log.clone();
                                 resp.size = log.len() as u64;
+                                resp.received_at = Some(Response::now_stamp());
                             }
                             if let Some(resp) = r.last_response.clone() {
                                 apply_autosave_example(r, &resp);
@@ -867,6 +871,7 @@ impl RequestPanel {
                                 resp.streaming = false;
                                 resp.body = log.clone();
                                 resp.size = log.len() as u64;
+                                resp.received_at = Some(Response::now_stamp());
                             }
                             if let Some(resp) = r.last_response.clone() {
                                 apply_autosave_example(r, &resp);
@@ -893,6 +898,7 @@ impl RequestPanel {
         let placeholder_resp = Response {
             status_text: name.clone(),
             error: Some(format!("{name} 协议支持开发中，敬请期待。")),
+            received_at: Some(Response::now_stamp()),
             ..Default::default()
         };
         self.state.update(cx, |s, _cx| {
@@ -919,6 +925,7 @@ impl RequestPanel {
     pub(super) fn set_error_response(&mut self, id: &str, msg: String, cx: &mut Context<Self>) {
         let err_resp = Response {
             error: Some(msg),
+            received_at: Some(Response::now_stamp()),
             ..Default::default()
         };
         self.state.update(cx, |s, _cx| {

@@ -3594,7 +3594,7 @@ dependencies = [
 [[package]]
 name = "gpui-component"
 version = "0.5.2"
-source = "git+https://github.com/lijingrs/gpui-component?rev=7268e295#7268e29556b5f5efb265a1a7a6846f3e426debf2"
+source = "git+https://github.com/lijingrs/gpui-component?rev=0ea2ca91#0ea2ca9123fdfbd73d637020cdede8857f7d7bd5"
 dependencies = [
  "aho-corasick",
  "anyhow",
@@ -3644,7 +3644,7 @@ dependencies = [
 [[package]]
 name = "gpui-component-assets"
 version = "0.5.1"
-source = "git+https://github.com/lijingrs/gpui-component?rev=7268e295#7268e29556b5f5efb265a1a7a6846f3e426debf2"
+source = "git+https://github.com/lijingrs/gpui-component?rev=0ea2ca91#0ea2ca9123fdfbd73d637020cdede8857f7d7bd5"
 dependencies = [
  "anyhow",
  "gpui",
@@ -3658,7 +3658,7 @@ dependencies = [
 [[package]]
 name = "gpui-component-macros"
 version = "0.5.1"
-source = "git+https://github.com/lijingrs/gpui-component?rev=7268e295#7268e29556b5f5efb265a1a7a6846f3e426debf2"
+source = "git+https://github.com/lijingrs/gpui-component?rev=0ea2ca91#0ea2ca9123fdfbd73d637020cdede8857f7d7bd5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -9030,7 +9030,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "verve"
-version = "0.5.10"
+version = "0.5.11"
 dependencies = [
  "anyhow",
  "boa_engine",
