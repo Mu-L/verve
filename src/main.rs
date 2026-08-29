@@ -23,7 +23,17 @@ fn main() {
         };
     }
     let _ = env_logger::Builder::from_default_env()
-        .format_timestamp_secs()
+        .format(|buf, record| {
+            use std::io::Write as _;
+            writeln!(
+                buf,
+                "{} [{}] [{}] {}",
+                chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+                record.level(),
+                record.target(),
+                record.args()
+            )
+        })
         .try_init();
 
     let app = gpui_platform::application().with_assets(VerveAssets::new());
@@ -126,7 +136,7 @@ fn launch_main_app(cx: &mut App) {
         titlebar: Some(gpui::TitlebarOptions {
             title: Some("Verve".into()),
             appears_transparent: true,
-            traffic_light_position: Some(point(px(14.), px(16.))),
+            traffic_light_position: Some(point(px(14.), px(14.))),
         }),
         window_bounds: Some(WindowBounds::Windowed(bounds)),
         window_min_size: Some(size(px(960.), px(600.))),

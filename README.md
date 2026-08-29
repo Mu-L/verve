@@ -476,6 +476,11 @@ The Community Edition keeps improving too. This is a transparent log of what has
 
 > Last updated: 2026-08
 
+- **Query tab ⇄ URL bar live sync** — while the Query tab is open the URL bar previews `path?a=1&b=2` composed live from the params table (percent-encoded exactly like the send path); typing in either side updates the other, and a query string already present in the URL is folded into the table when the tab opens — nothing is dropped, and the stored URL stays query-free.
+- **Traffic lights centered (macOS)** — the window traffic lights now sit exactly mid-height of the app's 40px self-drawn title bar.
+- **Hardened SSE streaming** — the SSE response parser was rebuilt as an incremental chunk-safe parser (partial lines and `\r\n` splits across network chunks are handled correctly; comments and multi-line `data:` fields per spec).
+- **Tab-close crash fix** — closing a request tab from the tab-overflow dropdown no longer risks a double-lease panic.
+
 - **JSON editing upgrades** — delete any property (object key / array element / whole subtree) directly from the formatted view with order preserved; Format & Simplify actions built into the Raw-JSON request-body editor.
 - **Smarter copy-as-curl** — bodies use the portable `-d` flag (works on old curl), and globals/dynamic variables are merged exactly like the real send path.
 - **Response receive time** in the status bar, and the actual-request tab is now a copyable code editor.
@@ -510,6 +515,8 @@ The Pro Edition ships new work almost every day. This section is a transparent l
 
 ### 🆘 App-wide
 
+- **Built-in AI assistant** — a floating assistant panel (⌘J, drag / resize / minimize-to-edge) with multi-provider LLM support (OpenAI-compatible; streaming, tool calls, usage & price display, 429 auto-retry). Plan mode (writes need approval) vs full access, agent loop with progressive context loading and auto-compaction, Codex-style working plan that survives compaction, progressively loaded skills with autonomous switching, backup-validate-rollback on AI writes, and file paste support (images to vision; Word/PDF/Office converted via `anydoc`; online doc URLs fetched). API keys live in the encrypted local vault.
+- **Markdown requirement docs** — Markdown nodes in the project tree become first-class requirement documents with doc ⇄ API link chips (both directions), AI-assisted extraction ("AI 智能提取 API 文档" import cards), and an embedded wysiwyg editor.
 - **Searchable help center** — a built-in help center (⌘/ / F1) covering every view and keyboard shortcut, including the user's custom shortcut overrides (the same table that registers the real bindings); searchable, with Esc-aware view switching.
 
 ### 🔐 SSH Terminal

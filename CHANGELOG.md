@@ -2,6 +2,35 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.7.0] - 2026-08-29
+
+> Version jumps 0.5.11 → 0.7.0 to stay in lockstep with the upstream project.
+
+### 🔧 Enhancements (synced from upstream)
+
+- **Query tab ⇄ URL bar live sync** — while the Query tab is active the URL
+  input previews `path?a=1&b=2` composed live from the params table,
+  percent-encoded exactly like the send path (`url::form_urlencoded`). Edits in
+  either side propagate to the other (idempotent compose keeps the URL-bar
+  cursor stable), and a query string already present in the stored URL is
+  folded into the params table on tab activation, so nothing is dropped. The
+  persisted URL, curl generation, and the send path all use the query-free
+  base value — the preview is display-only.
+- **macOS traffic lights centered** — main-window traffic lights move from
+  y=16 to y=14, the exact vertical center of the 40px self-drawn title bar.
+- **Hardened SSE streaming** — `http::sse` gains an incremental `SseParser`
+  (chunk-split-safe partial lines, `\r\n` handling, comment lines, multi-line
+  `data:` joining per the SSE spec) with 4 new round-trip tests; the response
+  panel's live stream now routes through it.
+- **Structured app logs** — env_logger now prints `timestamp [LEVEL] [target]
+  message` with local time.
+
+### 🐛 Fixes (synced from upstream)
+
+- **Tab-close double-lease panic** — closing a request tab from the
+  tab-overflow dropdown leased the panel entity twice (inside `cx.listener`);
+  it now uses the already-leased `this` directly.
+
 ## [0.5.11] - 2026-08-20
 
 ### 🔧 Enhancements (synced from upstream)
