@@ -2,6 +2,41 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.7.2] - 2026-09-05
+
+### 🔧 Enhancements (synced from upstream)
+
+- **Save file-stream responses to disk** — responses with
+  `Content-Disposition: attachment` (incl. RFC 5987 `filename*`, percent-decoded)
+  or `application/octet-stream` are detected as file streams: the raw bytes are
+  kept in a session temp file (immune to UTF-8 lossy corruption) and the
+  response status bar gains a「保存文件」button that opens a native save dialog
+  and copies asynchronously. Server-sent names are sanitized against path
+  traversal.
+- **File-picker interaction** — for form-data file rows the picker opens by
+  clicking the value cell (placeholder shown until a file is chosen); switching
+  the type to File no longer pops a dialog automatically.
+
+### 🐛 Fixes (synced from upstream)
+
+- **Multipart uploads** — a user-set `Content-Type` header on a form-data part
+  is now honored (its boundary reused, or replaced in place) instead of
+  appending a second one that broke server-side parsing; `Content-Disposition`
+  name/filename values are quoted/newline-escaped against header injection.
+- **Copy-as-curl for form-data** — the actual-request curl emits `-F` parts
+  instead of dumping binary bodies as `-d`, and the actual-request panel shows
+  parts structurally rather than mojibake.
+- **Wire-level form-data tests** — end-to-end tests verify the exact bytes on
+  the wire for multipart bodies.
+
+## [0.7.1] - 2026-08-29
+
+### 🧹 Maintenance
+
+- Repository moved to `aios-pub/verve`: updated the Cargo homepage, README
+  links/badges, docs-site links (now `https://aios.pub/verve/` — the old
+  Pages URL is dead), and the updater's release-check repo slug.
+
 ## [0.7.0] - 2026-08-29
 
 > Version jumps 0.5.11 → 0.7.0 to stay in lockstep with the upstream project.

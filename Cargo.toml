@@ -134,6 +134,8 @@ rust-embed = "8.7"
 lsp-types = { version = "0.97.0", features = ["proposed"] }
 # Rope text buffer for offset/position math in the completion engine.
 ropey = { version = "=2.0.0-beta.1", features = ["metric_lines_lf", "metric_utf16"] }
+# Native file dialogs (open/save) — response "save file to disk" flow.
+rfd = "0.15"
 
 [lints.clippy]
 dbg_macro = "deny"

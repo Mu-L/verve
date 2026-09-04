@@ -12,12 +12,29 @@ use crate::state::models::{
     AuthConfig, AuthTarget, AuthType, BodyType, KeyValue, RequestMethod, Response,
 };
 
+/// One structural `multipart/form-data` part, kept alongside the raw wire
+/// bytes so the "实际请求" display and the curl export can render the parts
+/// (file names, sizes) without re-parsing the binary body.
+pub enum PreparedFormPart {
+    Field { name: String, value: String },
+    File {
+        name: String,
+        filename: String,
+        /// Absolute/source path the bytes were read from (used by `-F`).
+        path: String,
+        mime: &'static str,
+        size: usize,
+    },
+}
+
 /// A fully-resolved request ready to send.
 pub struct PreparedRequest {
     pub method: RequestMethod,
     pub url: String,
     pub headers: Vec<(String, String)>,
     pub body: Vec<u8>,
+    /// Non-empty only for `multipart/form-data` bodies.
+    pub form_parts: Vec<PreparedFormPart>,
 }
 
 /// Cap for the body text shown in the "实际请求" tab / curl snapshot so huge
@@ -52,7 +69,34 @@ impl PreparedRequest {
                 text.push_str(&format!("\n{k}: {v}"));
             }
         }
-        if !self.body.is_empty() {
+        if !self.form_parts.is_empty() {
+            // Render multipart bodies structurally: file bytes are binary and
+            // would only show as U+FFFD noise in a lossy dump.
+            let boundary = self
+                .headers
+                .iter()
+                .find(|(k, _)| k.eq_ignore_ascii_case("content-type"))
+                .and_then(|(_, v)| extract_boundary(v))
+                .unwrap_or_default();
+            text.push_str("\n\n[Body] multipart/form-data\n");
+            for part in &self.form_parts {
+                match part {
+                    PreparedFormPart::Field { name, value } => text.push_str(&format!(
+                        "--{boundary}\nContent-Disposition: form-data; name=\"{name}\"\n\n{value}\n"
+                    )),
+                    PreparedFormPart::File {
+                        name,
+                        filename,
+                        mime,
+                        size,
+                        ..
+                    } => text.push_str(&format!(
+                        "--{boundary}\nContent-Disposition: form-data; name=\"{name}\"; filename=\"{filename}\"\nContent-Type: {mime}\n\n<{filename}，{size} 字节二进制>\n"
+                    )),
+                }
+            }
+            text.push_str(&format!("--{boundary}--\n"));
+        } else if !self.body.is_empty() {
             text.push_str("\n\n[Body]\n");
             text.push_str(&display_body(&self.body));
         }
@@ -63,6 +107,44 @@ impl PreparedRequest {
     /// already baked into the headers/URL by `prepare()`, and query params
     /// are already encoded into the URL.
     pub fn to_curl(&self) -> String {
+        if !self.form_parts.is_empty() {
+            // Multipart must export as `-F` parts — the raw wire bytes contain
+            // binary file data that a `-d '...'` literal can't carry. Drop the
+            // (auto-generated) multipart Content-Type so curl derives its own
+            // boundary for `-F`; a pinned `-H` boundary would desync from it.
+            let headers: Vec<(String, String)> = self
+                .headers
+                .iter()
+                .filter(|(k, v)| {
+                    !(k.eq_ignore_ascii_case("content-type")
+                        && v.to_ascii_lowercase().starts_with("multipart/"))
+                })
+                .cloned()
+                .collect();
+            let parts = self
+                .form_parts
+                .iter()
+                .map(|p| match p {
+                    PreparedFormPart::Field { name, value } => super::curl::CurlFormPart::Field {
+                        name: name.clone(),
+                        value: value.clone(),
+                    },
+                    PreparedFormPart::File { name, path, .. } => super::curl::CurlFormPart::File {
+                        name: name.clone(),
+                        path: path.clone(),
+                    },
+                })
+                .collect();
+            return super::curl::render(&super::curl::CurlSpec {
+                method: self.method,
+                url: self.url.clone(),
+                params: Vec::new(),
+                headers,
+                cookies: Vec::new(),
+                auth: AuthConfig::default(),
+                body: super::curl::CurlBody::Form(parts),
+            });
+        }
         let content_type = self
             .headers
             .iter()
@@ -185,6 +267,7 @@ pub fn prepare(
 
     // Body + ensure a Content-Type.
     let mut body_bytes: Vec<u8> = Vec::new();
+    let mut form_parts: Vec<PreparedFormPart> = Vec::new();
     match body.body_type {
         BodyType::None => {}
         BodyType::Raw => {
@@ -217,12 +300,34 @@ pub fn prepare(
             body_bytes = serde_urlencode(&pairs).into_bytes();
         }
         BodyType::FormData => {
-            // Use a simple multipart boundary. File uploads are read from disk.
-            let boundary = format!("verve-{}", uuid::Uuid::new_v4().simple());
-            out_headers.push((
-                "Content-Type".into(),
-                format!("multipart/form-data; boundary={boundary}"),
-            ));
+            // Exactly one Content-Type header must reach the wire. `Builder::
+            // header()` appends, so blindly pushing a second one (next to a
+            // stale user `application/json` or a Postman-imported bare
+            // `multipart/form-data`) makes servers parse the body with the
+            // wrong type/boundary. If the user set a Content-Type, honour its
+            // `boundary=` when present; otherwise replace the value in place
+            // (Postman semantics: the body type decides the Content-Type).
+            let boundary = match out_headers
+                .iter_mut()
+                .find(|(k, _)| k.eq_ignore_ascii_case("content-type"))
+            {
+                Some((_k, v)) => match extract_boundary(v) {
+                    Some(b) => b,
+                    None => {
+                        let b = format!("verve-{}", uuid::Uuid::new_v4().simple());
+                        *v = format!("multipart/form-data; boundary={b}");
+                        b
+                    }
+                },
+                None => {
+                    let b = format!("verve-{}", uuid::Uuid::new_v4().simple());
+                    out_headers.push((
+                        "Content-Type".into(),
+                        format!("multipart/form-data; boundary={b}"),
+                    ));
+                    b
+                }
+            };
             for kv in &body.form_data {
                 if !kv.enabled || kv.is_empty() {
                     continue;
@@ -243,12 +348,21 @@ pub fn prepare(
                             let mime = guess_mime(&filename);
                             body_bytes.extend_from_slice(
                                 format!(
-                                    "--{boundary}\r\nContent-Disposition: form-data; name=\"{name}\"; filename=\"{filename}\"\r\nContent-Type: {mime}\r\n\r\n"
+                                    "--{boundary}\r\nContent-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\nContent-Type: {mime}\r\n\r\n",
+                                    escape_header_param(&name),
+                                    escape_header_param(&filename)
                                 )
                                 .as_bytes(),
                             );
                             body_bytes.extend_from_slice(&data);
                             body_bytes.extend_from_slice(b"\r\n");
+                            form_parts.push(PreparedFormPart::File {
+                                name,
+                                filename,
+                                path,
+                                mime,
+                                size: data.len(),
+                            });
                         }
                         Err(e) => {
                             return Err(anyhow::anyhow!("read file {path}: {e}"));
@@ -258,10 +372,12 @@ pub fn prepare(
                     let value = super::variable::substitute(&kv.value, vars);
                     body_bytes.extend_from_slice(
                         format!(
-                            "--{boundary}\r\nContent-Disposition: form-data; name=\"{name}\"\r\n\r\n{value}\r\n"
+                            "--{boundary}\r\nContent-Disposition: form-data; name=\"{}\"\r\n\r\n{value}\r\n",
+                            escape_header_param(&name)
                         )
                         .as_bytes(),
                     );
+                    form_parts.push(PreparedFormPart::Field { name, value });
                 }
             }
             body_bytes.extend_from_slice(format!("--{boundary}--\r\n").as_bytes());
@@ -274,11 +390,49 @@ pub fn prepare(
         url,
         headers: out_headers,
         body: body_bytes,
+        form_parts,
     })
 }
 
 fn ensure_header(headers: &[(String, String)], name: &str) -> bool {
     headers.iter().any(|(k, _)| k.eq_ignore_ascii_case(name))
+}
+
+/// Pull `boundary=...` out of a Content-Type value, honouring quoted values
+/// (e.g. a Postman-imported `multipart/form-data; boundary="----abc"`). Only
+/// ASCII markers are searched, so byte offsets map 1:1 onto the original
+/// string and every slice lands on a char boundary.
+fn extract_boundary(content_type: &str) -> Option<String> {
+    let start = content_type
+        .to_ascii_lowercase()
+        .find("boundary=")
+        .map(|i| i + "boundary=".len())?;
+    let rest = content_type.get(start..)?;
+    let end = rest.find(';').unwrap_or(rest.len());
+    let trimmed = rest.get(..end)?.trim().trim_matches('"');
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
+}
+
+/// Make a string safe to embed inside a quoted Content-Disposition parameter:
+/// escape backslash/quote and flatten CR/LF (a header value must stay on one
+/// line — unescaped newlines would split/inject headers).
+fn escape_header_param(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '\\' | '"' => {
+                out.push('\\');
+                out.push(c);
+            }
+            '\r' | '\n' => out.push(' '),
+            _ => out.push(c),
+        }
+    }
+    out
 }
 
 /// Apply authentication to the outgoing headers (or query string for an API
@@ -560,6 +714,7 @@ pub async fn execute(
                 actual_request: None,
                 actual_curl: None,
                 received_at: Some(Response::now_stamp()),
+                download_file: None,
             };
         }
     };
@@ -580,6 +735,26 @@ pub async fn execute(
     let mut buf = Vec::new();
     let _ = body.read_to_end(&mut buf).await;
     let size = buf.len() as u64;
+
+    // File-stream response (content-disposition attachment / octet-stream):
+    // stash the raw bytes into a session temp file so the response panel can
+    // offer a native save dialog. Best-effort — on any failure the save
+    // affordance is simply absent.
+    let download_file = match crate::state::models::file_stream_filename(&headers) {
+        Some(name) => {
+            let dir = std::env::temp_dir().join("verve-downloads");
+            if smol::fs::create_dir_all(&dir).await.is_ok() {
+                let path = dir.join(format!("{}_{name}", uuid::Uuid::new_v4().simple()));
+                smol::fs::write(&path, &buf)
+                    .await
+                    .ok()
+                    .map(|_| path.to_string_lossy().into_owned())
+            } else {
+                None
+            }
+        }
+        None => None,
+    };
 
     let is_json = headers
         .iter()
@@ -608,6 +783,7 @@ pub async fn execute(
         actual_request: None,
         actual_curl: None,
         received_at: Some(Response::now_stamp()),
+        download_file,
     }
 }
 
@@ -624,7 +800,182 @@ mod tests {
                 ("Content-Type".to_string(), "application/json".to_string()),
             ],
             body: b"{\"a\":1}".to_vec(),
+            form_parts: Vec::new(),
         }
+    }
+
+    fn form_data_request(
+        form: Vec<KeyValue>,
+        headers: Vec<KeyValue>,
+    ) -> Result<PreparedRequest> {
+        form_data_request_at("http://api.io/up", form, headers)
+    }
+
+    fn form_data_request_at(
+        url: &str,
+        form: Vec<KeyValue>,
+        headers: Vec<KeyValue>,
+    ) -> Result<PreparedRequest> {
+        prepare(
+            RequestMethod::Post,
+            url,
+            &[],
+            &headers,
+            &[],
+            &[],
+            &AuthConfig::default(),
+            &crate::state::models::RequestBody {
+                body_type: BodyType::FormData,
+                form_data: form,
+                ..Default::default()
+            },
+            &BTreeMap::new(),
+            30,
+        )
+    }
+
+    fn content_types(p: &PreparedRequest) -> Vec<&String> {
+        p.headers
+            .iter()
+            .filter(|(k, _)| k.eq_ignore_ascii_case("content-type"))
+            .map(|(_, v)| v)
+            .collect()
+    }
+
+    #[test]
+    fn form_data_without_user_ct_injects_exactly_one() {
+        let p = form_data_request(vec![KeyValue::new("a", "1")], Vec::new())
+            .expect("prepare form-data");
+        let cts = content_types(&p);
+        assert_eq!(cts.len(), 1, "exactly one Content-Type: {:?}", cts);
+        assert!(
+            cts[0].starts_with("multipart/form-data; boundary="),
+            "{:?}",
+            cts[0]
+        );
+        let boundary = extract_boundary(cts[0]).expect("generated boundary");
+        let body = String::from_utf8(p.body.clone()).expect("text-only parts are utf-8");
+        assert!(
+            body.starts_with(&format!("--{boundary}\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n1\r\n")),
+            "{body}"
+        );
+        assert!(body.ends_with(&format!("--{boundary}--\r\n")), "{body}");
+        // The display renders parts structurally instead of dumping bytes.
+        let text = p.request_text();
+        assert!(text.contains("[Body] multipart/form-data"), "{text}");
+        assert!(text.contains("name=\"a\"\n\n1\n"), "{text}");
+    }
+
+    #[test]
+    fn form_data_replaces_user_content_type_without_boundary() {
+        // A stale JSON Content-Type must be replaced in place, not appended
+        // next to — two Content-Type headers break server-side multipart
+        // parsing.
+        let p = form_data_request(
+            vec![KeyValue::new("a", "1")],
+            vec![KeyValue::new("Content-Type", "application/json")],
+        )
+        .expect("prepare form-data");
+        let cts = content_types(&p);
+        assert_eq!(cts.len(), 1, "no duplicate Content-Type: {:?}", cts);
+        assert!(
+            cts[0].starts_with("multipart/form-data; boundary="),
+            "{:?}",
+            cts[0]
+        );
+        let boundary = extract_boundary(cts[0]).expect("replaced boundary");
+        assert!(String::from_utf8_lossy(&p.body).contains(&format!("--{boundary}\r\n")));
+    }
+
+    #[test]
+    fn form_data_honours_user_boundary() {
+        let p = form_data_request(
+            vec![KeyValue::new("a", "1")],
+            vec![KeyValue::new(
+                "Content-Type",
+                "multipart/form-data; boundary=----webkit",
+            )],
+        )
+        .expect("prepare form-data");
+        let cts = content_types(&p);
+        assert_eq!(cts.len(), 1);
+        assert_eq!(cts[0], "multipart/form-data; boundary=----webkit");
+        let body = String::from_utf8(p.body.clone()).expect("utf-8");
+        assert!(body.contains("------webkit\r\n"), "{body}");
+        assert!(body.ends_with("------webkit--\r\n"), "{body}");
+    }
+
+    #[test]
+    fn form_data_escapes_header_params() {
+        let kv = KeyValue {
+            enabled: true,
+            key: "a\"b\nc".into(),
+            value: "v".into(),
+            ..KeyValue::default()
+        };
+        let p = form_data_request(vec![kv], Vec::new()).expect("prepare form-data");
+        let body = String::from_utf8(p.body.clone()).expect("utf-8");
+        assert!(
+            body.contains("name=\"a\\\"b c\""),
+            "quotes escaped, newline flattened: {body}"
+        );
+    }
+
+    #[test]
+    fn form_data_file_part_wire_format() {
+        // Distinct per-test temp names: tests run in parallel and one must not
+        // delete the file another is still reading.
+        let path = std::env::temp_dir().join("verve_multipart_test_wire.png");
+        std::fs::write(&path, b"\x89PNG-fake").expect("write temp file");
+        let kv = KeyValue {
+            enabled: true,
+            key: "file".into(),
+            value: String::new(),
+            file_path: Some(path.to_string_lossy().into_owned()),
+            ..KeyValue::default()
+        };
+        let p = form_data_request(vec![kv], Vec::new()).expect("prepare form-data");
+        let boundary = extract_boundary(content_types(&p)[0]).expect("boundary");
+        let prefix = format!(
+            "--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"verve_multipart_test_wire.png\"\r\nContent-Type: image/png\r\n\r\n"
+        );
+        assert!(
+            p.body.starts_with(prefix.as_bytes()),
+            "file part header: {}",
+            String::from_utf8_lossy(&p.body)
+        );
+        let hdr_end = prefix.len();
+        assert_eq!(&p.body[hdr_end..hdr_end + 9], b"\x89PNG-fake");
+        assert_eq!(&p.body[hdr_end + 9..hdr_end + 11], b"\r\n");
+        assert!(p.body.ends_with(format!("--{boundary}--\r\n").as_bytes()));
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn form_data_to_curl_uses_dash_f() {
+        let path = std::env::temp_dir().join("verve_multipart_test_curl.png");
+        std::fs::write(&path, b"\x89PNG-fake").expect("write temp file");
+        let kv = KeyValue {
+            enabled: true,
+            key: "file".into(),
+            value: String::new(),
+            file_path: Some(path.to_string_lossy().into_owned()),
+            ..KeyValue::default()
+        };
+        let p = form_data_request(
+            vec![kv, KeyValue::new("note", "hi")],
+            Vec::new(),
+        )
+        .expect("prepare form-data");
+        let curl = p.to_curl();
+        assert!(curl.contains("-F 'file=@\""), "{curl}");
+        assert!(curl.contains("-F 'note=hi'"), "{curl}");
+        assert!(!curl.contains("-d "), "multipart must not use -d: {curl}");
+        assert!(
+            !curl.contains("boundary"),
+            "curl derives the boundary for -F itself: {curl}"
+        );
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]
@@ -671,5 +1022,139 @@ mod tests {
         // Truncation must not split a UTF-8 char: the lossy decode never
         // produces U+FFFD from our own slicing (we cut at a boundary).
         assert!(!text.contains('\u{FFFD}'), "{text}");
+    }
+
+    /// End-to-end: send a real form-data request through `execute()` (the
+    /// actual reqwest client) against a local TCP server that dumps the raw
+    /// wire bytes. Guards against the send layer mangling the multipart body
+    /// (duplicate Content-Type, header/body boundary mismatch, truncation) —
+    /// the failure an axum/multipart server reports as "读取表单字段失败".
+    #[test]
+    fn form_data_wire_bytes_survive_the_real_client() {
+        use std::io::{Read, Write};
+        use std::net::TcpListener;
+        use std::sync::{Arc, Mutex};
+
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
+        let port = listener.local_addr().expect("addr").port();
+        let raw: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(Vec::new()));
+        let raw_srv = raw.clone();
+        std::thread::spawn(move || {
+            let Ok((mut sock, _)) = listener.accept() else {
+                return;
+            };
+            sock.set_read_timeout(Some(std::time::Duration::from_secs(5)))
+                .ok();
+            let mut buf = [0u8; 8192];
+            loop {
+                let n = match sock.read(&mut buf) {
+                    Ok(0) | Err(_) => break,
+                    Ok(n) => n,
+                };
+                {
+                    let mut g = raw_srv.lock().expect("raw");
+                    g.extend_from_slice(&buf[..n]);
+                    // Respond once the headers and the full body (per
+                    // Content-Length) have arrived, so the client can finish.
+                    let Some(header_end) = find_subsequence(&g, b"\r\n\r\n") else {
+                        continue;
+                    };
+                    let head =
+                        String::from_utf8_lossy(&g[..header_end]).to_ascii_lowercase();
+                    let cl = head.lines().find_map(|l| {
+                        l.strip_prefix("content-length:")?
+                            .trim()
+                            .parse::<usize>()
+                            .ok()
+                    });
+                    let Some(cl) = cl else { continue };
+                    if g.len() < header_end + 4 + cl {
+                        continue;
+                    }
+                }
+                sock.write_all(
+                    b"HTTP/1.1 200 OK\r\nContent-Type: application/vnd.ms-excel\r\nContent-Disposition: attachment; filename=\"report.xlsx\"\r\nContent-Length: 2\r\n\r\nok",
+                )
+                .ok();
+                break;
+            }
+        });
+
+        let file_path = std::env::temp_dir().join("verve_wire_test.png");
+        std::fs::write(&file_path, b"\x89PNG-wire").expect("write temp file");
+        let form = vec![
+            KeyValue::new("note", "hi"),
+            KeyValue {
+                enabled: true,
+                key: "file".into(),
+                value: String::new(),
+                file_path: Some(file_path.to_string_lossy().into_owned()),
+                ..KeyValue::default()
+            },
+        ];
+        // Postman-style imported header WITH its own boundary: the wire body
+        // must reuse it, and no second Content-Type may appear.
+        let headers = vec![KeyValue::new(
+            "Content-Type",
+            "multipart/form-data; boundary=postman-bnd",
+        )];
+        let prepared =
+            form_data_request_at(&format!("http://127.0.0.1:{port}/up"), form, headers)
+                .expect("prepare form-data");
+
+        let client = reqwest_client::ReqwestClient::user_agent("verve-test").expect("client");
+        let resp = smol::block_on(execute(&client, prepared, 10));
+        assert_eq!(resp.status, 200, "error: {:?}", resp.error);
+        // The attachment response must be stashed for the save dialog, with
+        // byte-exact content and the parsed filename in the temp path.
+        let stashed = resp.download_file.clone().expect("download_file set");
+        assert!(
+            std::path::Path::new(&stashed)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .expect("temp name")
+                .ends_with("report.xlsx"),
+            "{stashed}"
+        );
+        let stashed_bytes = std::fs::read(&stashed).expect("read stashed file");
+        assert_eq!(stashed_bytes, b"ok", "raw bytes intact");
+        let _ = std::fs::remove_file(&stashed);
+        let _ = std::fs::remove_file(&file_path);
+
+        let raw = raw.lock().expect("raw").clone();
+        let header_end = find_subsequence(&raw, b"\r\n\r\n").expect("header terminator");
+        let head = String::from_utf8_lossy(&raw[..header_end]).to_string();
+        let body = raw[header_end + 4..].to_vec();
+
+        // Exactly one Content-Type on the wire.
+        let ct_count = head
+            .lines()
+            .filter(|l| l.to_ascii_lowercase().starts_with("content-type:"))
+            .count();
+        assert_eq!(ct_count, 1, "one Content-Type on the wire:\n{head}");
+
+        // The boundary in the header matches the delimiters in the body.
+        let ct_line = head
+            .lines()
+            .find(|l| l.to_ascii_lowercase().starts_with("content-type:"))
+            .expect("content-type line");
+        assert_eq!(
+            extract_boundary(ct_line).expect("wire boundary"),
+            "postman-bnd"
+        );
+        let body_text = String::from_utf8_lossy(&body);
+        assert!(body_text.contains("--postman-bnd\r\n"), "{body_text}");
+        assert!(
+            body.ends_with(b"--postman-bnd--\r\n"),
+            "closing delimiter intact: {body_text}"
+        );
+        assert!(
+            find_subsequence(&body, b"\x89PNG-wire").is_some(),
+            "file bytes intact"
+        );
+    }
+
+    fn find_subsequence(haystack: &[u8], needle: &[u8]) -> Option<usize> {
+        haystack.windows(needle.len()).position(|w| w == needle)
     }
 }

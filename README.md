@@ -474,8 +474,11 @@ The Pro Edition (pre-compiled binaries + continuous updates + priority support) 
 
 The Community Edition keeps improving too. This is a transparent log of what has landed in the free, open-source build (the same code in this repo). Pro-only features (SSH / Docker / K8s / notes / PDF / testing) are listed separately below.
 
-> Last updated: 2026-08
+> Last updated: 2026-09
 
+- **Save file-stream responses** — attachment / octet-stream responses keep their raw bytes (no UTF-8 corruption) and a「保存文件」button in the status bar opens a native save dialog; server-sent filenames are decoded (RFC 5987) and sanitized.
+- **Multipart upload fixes** — your own `Content-Type` on a form-data part is honored (no duplicate header), names/filenames are escaped against header injection, and copy-as-curl emits proper `-F` parts; the actual-request panel shows parts structurally instead of binary mojibake.
+- **Calmer file picking** — form-data file rows pick a file by clicking the value cell; switching the row type to File no longer auto-opens a dialog.
 - **Query tab ⇄ URL bar live sync** — while the Query tab is open the URL bar previews `path?a=1&b=2` composed live from the params table (percent-encoded exactly like the send path); typing in either side updates the other, and a query string already present in the URL is folded into the table when the tab opens — nothing is dropped, and the stored URL stays query-free.
 - **Traffic lights centered (macOS)** — the window traffic lights now sit exactly mid-height of the app's 40px self-drawn title bar.
 - **Hardened SSE streaming** — the SSE response parser was rebuilt as an incremental chunk-safe parser (partial lines and `\r\n` splits across network chunks are handled correctly; comments and multi-line `data:` fields per spec).
@@ -511,7 +514,7 @@ The Community Edition keeps improving too. This is a transparent log of what has
 
 The Pro Edition ships new work almost every day. This section is a transparent log of recent Pro-side iterations, so the community can see exactly what's being built on top of the free Community Edition. (Community Edition users get the full daily API workflow for free; these land in the Pro build.)
 
-> Last updated: 2026-08
+> Last updated: 2026-09
 
 ### 🆘 App-wide
 
@@ -521,6 +524,7 @@ The Pro Edition ships new work almost every day. This section is a transparent l
 
 ### 🔐 SSH Terminal
 
+- **SFTP directory upload** — upload whole folders recursively from the SFTP browser, plus terminal interaction refinements.
 - **MFA / 2FA authentication** — new `keyboard-interactive` auth type for TOTP / OTP / hardware-key servers. The verification code is prompted dynamically at connect time, and "password + OTP" pairing is supported (account password first, then the OTP).
 - **Duplicate session** — clone an SSH session into a fresh, independent tab (own socket & session id). It reuses the already-authenticated connection, so an MFA-protected host won't ask for a second OTP (skip-MFA on duplicate).
 - **Double-click word selection** in the terminal.
@@ -530,6 +534,8 @@ The Pro Edition ships new work almost every day. This section is a transparent l
 
 ### 🗒️ Markdown Notes & PDF
 
+- **Find matches inside table cells** — markdown search now matches content inside table cells, not just outside tables.
+- **New-tab save fix** — opening a markdown file in a new editor tab no longer pops a "Save as" dialog on save; it writes back to the original file.
 - **Full-text search** — notes are indexed with a tantivy inverted index for instant keyword search across the whole notebook.
 - **Media storage (local + S3)** — images and videos embedded in notes are stored locally or pushed to S3, with a cleanup module for orphaned media. The media root folder can now be picked from a native directory browser.
 - **Notes scale & loading** — optimized load algorithm, an original-file management mechanism, node move, tab collapse, live word count (with a fixed word-count edge case), and auto-expand of long text on focus.
