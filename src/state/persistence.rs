@@ -94,6 +94,53 @@ fn workspace_path(dir: &Path) -> PathBuf {
     dir.join("workspace.json")
 }
 
+/// Absolute path of the workspace file (None if the data dir is unavailable).
+pub fn workspace_file() -> Option<PathBuf> {
+    data_dir().ok().map(|d| workspace_path(&d))
+}
+
+/// Copy `workspace.json` → `workspace.json.bak` before an AI/MCP-driven change.
+/// Returns the backup path, or None when there is nothing to back up yet.
+pub fn backup_workspace_file() -> Option<PathBuf> {
+    let src = workspace_file()?;
+    if !src.exists() {
+        return None;
+    }
+    let dst = src.with_extension("json.bak");
+    std::fs::copy(&src, &dst).ok().map(|_| dst)
+}
+
+/// Parse-check the persisted workspace file (JSON round-trip guard).
+pub fn validate_workspace_file() -> Result<(), String> {
+    let path = workspace_file().ok_or("数据目录不可用")?;
+    let text = std::fs::read_to_string(&path).map_err(|e| format!("读取失败: {e}"))?;
+    serde_json::from_str::<WorkspaceData>(&text)
+        .map_err(|e| format!("workspace.json 解析失败: {e}"))
+        .map(|_| ())
+}
+
+/// Restore `workspace.json` from the `.bak` backup.
+pub fn restore_workspace_backup() -> Result<(), String> {
+    let path = workspace_file().ok_or("数据目录不可用")?;
+    let bak = path.with_extension("json.bak");
+    if !bak.exists() {
+        return Err("备份不存在".into());
+    }
+    std::fs::copy(&bak, &path)
+        .map_err(|e| format!("恢复失败: {e}"))
+        .map(|_| ())
+}
+
+/// Cheap `(size, modified time)` fingerprint of `workspace.json`, used by the
+/// GUI watcher to detect edits made by other local processes (the MCP server
+/// subprocess, hand edits). `None` when the file is unavailable.
+pub fn file_fingerprint() -> Option<(u64, std::time::SystemTime)> {
+    let path = workspace_file()?;
+    let meta = std::fs::metadata(path).ok()?;
+    let modified = meta.modified().ok()?;
+    Some((meta.len(), modified))
+}
+
 /// Load the workspace from disk, or return the demo workspace on first run /
 /// when the file is missing or unreadable.
 pub fn load_or_default() -> WorkspaceData {

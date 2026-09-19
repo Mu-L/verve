@@ -724,7 +724,8 @@ mod tests {
             rels,
             vec!["a.txt", "sub/b.txt", "sub/deep/c.txt", "中文目录/文件.txt"]
         );
-        assert_eq!(files.iter().map(|f| f.size).sum::<u64>(), 3 + 5 + 0 + 2);
+        // Sizes: 3 + 5 + 0 + 2 across the four files.
+        assert_eq!(files.iter().map(|f| f.size).sum::<u64>(), 10);
         // Local paths stay absolute and point at real files.
         assert!(files.iter().all(|f| f.local.is_absolute()));
         assert!(files.iter().all(|f| f.local.is_file()));

@@ -17,6 +17,29 @@ use verve::ui::VerveApp;
 use verve::{mock, state, ui};
 
 fn main() {
+    // Headless CLI subcommands must be dispatched BEFORE any GUI setup. The
+    // MCP server speaks JSON-RPC over stdio: stdout is reserved for protocol
+    // frames, so all diagnostics go to stderr (env_logger default).
+    let cli_args: Vec<String> = std::env::args().skip(1).collect();
+    if cli_args.first().map(String::as_str) == Some("mcp") {
+        if std::env::var("RUST_LOG").is_err() {
+            unsafe {
+                std::env::set_var("RUST_LOG", "warn");
+            };
+        }
+        let _ = env_logger::Builder::from_default_env().try_init();
+        let _ = rustls::crypto::ring::default_provider().install_default();
+        let rest: Vec<String> = cli_args.iter().skip(1).cloned().collect();
+        match verve::mcp::run_cli(&rest) {
+            Ok(()) => {}
+            Err(e) => {
+                eprintln!("verve mcp 启动失败: {e:#}");
+                std::process::exit(1);
+            }
+        }
+        return;
+    }
+
     if std::env::var("RUST_LOG").is_err() {
         unsafe {
             std::env::set_var("RUST_LOG", "info");

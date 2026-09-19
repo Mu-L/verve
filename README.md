@@ -476,6 +476,7 @@ The Community Edition keeps improving too. This is a transparent log of what has
 
 > Last updated: 2026-09
 
+- **MCP server (`verve mcp`)** 🤖 — expose the workspace to external AI clients (Claude Desktop, Cursor, Claude Code, …) over the Model Context Protocol: search/list/open requests and apply structured create/update/move/delete operations, with a backup-validate-rollback guard on `workspace.json` and live hot-reload (with notification) in the running GUI. See [docs/mcp.md](docs/mcp.md).
 - **SSH / SFTP terminal is now open-source** 🎉 — the full SSH module joins the Community Edition: host cards, multi-tab terminals (full ANSI / xterm-256color, double-click word selection, scrollback), jump-host/bastion tunnels, SFTP file browsing (incl. recursive directory upload), in-terminal Zmodem `rz`/`sz`, one-click local port forwarding, local terminal mode, TOFU `known_hosts` verification, MFA / 2FA (`keyboard-interactive`) auth, and OS-keychain + AES-256-GCM / Argon2id encrypted credential storage — free for everyone, and now fixed for SSH disconnect/reconnect. SSH gets the ⌘2 rail slot.
 - **JSON search** — ⌘/Ctrl+F in the JSON formatter opens a search bar that filters/matches JSON paths instantly (scoped key context so it never collides with the Markdown editor's find).
 - **Save file-stream responses** — attachment / octet-stream responses keep their raw bytes (no UTF-8 corruption) and a「保存文件」button in the status bar opens a native save dialog; server-sent filenames are decoded (RFC 5987) and sanitized.

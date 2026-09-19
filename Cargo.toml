@@ -151,6 +151,17 @@ bincode = "1"
 # Recursive directory walk (SFTP directory upload) and system locale detection.
 walkdir = "2.5"
 sys-locale = "0.3"
+# MCP (Model Context Protocol) server SDK. Lets external AI clients (Claude
+# Desktop, Cursor, Claude Code, VS Code Copilot, ...) manage the Verve API
+# workspace over stdio; the client launches `verve mcp` as a subprocess.
+# Default features provide server + #[tool] macros + schemars; `transport-io`
+# adds the stdio transport (tokio stdin/stdout). rmcp 3.x uses schemars 1.x and
+# tokio 1, matching the rest of the dependency tree.
+rmcp = { version = "3.0", features = ["transport-io"] }
+# JSON Schema generation for the MCP tool parameter types.
+schemars = "1"
+# Crypto provider bootstrap for the headless MCP CLI (no GUI init path).
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
 
 [lints.clippy]
 dbg_macro = "deny"

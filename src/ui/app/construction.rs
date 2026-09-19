@@ -508,11 +508,53 @@ impl VerveApp {
         // bothering the user on every launch).
         app.startup_update_check(cx);
 
+        // Hot-reload workspace.json when another local process changes it
+        // (the `verve mcp` server subprocess writing through an AI client, or
+        // a hand edit). Liveness follows the VerveApp entity via `this`.
+        app.start_workspace_file_watcher(window, cx);
+
         app
     }
 }
 
 impl VerveApp {
+    /// Poll `workspace.json` and hot-reload when an external process (the MCP
+    /// server) rewrites it. Reloads are skipped while the GUI has unsaved edits
+    /// (see [`crate::state::AppState::reload_external_changes`]).
+    pub(super) fn start_workspace_file_watcher(
+        &mut self,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let win = window.window_handle();
+        cx.spawn(async move |this, cx| {
+            loop {
+                cx.background_executor()
+                    .timer(std::time::Duration::from_millis(1500))
+                    .await;
+                let reloaded = this.update(cx, |app, cx| {
+                    app.state
+                        .update(cx, |s, cx| s.reload_external_changes(cx))
+                });
+                let Ok(reloaded) = reloaded else {
+                    return; // app dropped
+                };
+                if reloaded {
+                    let _ = cx.update_window(win, |_view, window, cx| {
+                        window.push_notification(
+                            gpui_component::notification::Notification::new()
+                                .title("工作区已更新")
+                                .message("检测到外部变更（MCP / 其他程序），已重新加载工作区。")
+                                .autohide(true),
+                            cx,
+                        );
+                    });
+                }
+            }
+        })
+        .detach();
+    }
+
     pub(super) fn startup_update_check(&mut self, cx: &mut Context<Self>) {
         let client = cx.http_client();
         cx.spawn(async move |this, cx| {

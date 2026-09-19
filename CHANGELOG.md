@@ -33,6 +33,16 @@ All notable changes to Verve will be documented in this file.
 
 ### 🔧 Enhancements (synced from upstream)
 
+- **MCP server (`verve mcp`)** 🤖 — expose the Verve workspace to external AI
+  clients (Claude Desktop, Cursor, Claude Code, VS Code Copilot, …) over the
+  Model Context Protocol: the client launches `verve mcp` as a stdio
+  subprocess and can search/list/open requests, inspect the project tree, and
+  apply structured change operations (create/update/move/delete requests &
+  folders, with the same id/variable semantics as the GUI). Every write goes
+  through a backup → validate → rollback guard on `workspace.json`, and the
+  running GUI hot-reloads external changes (with a notification) via a file
+  watcher. Docs: [docs/mcp.md](docs/mcp.md). Ships with the shared change-plan
+  executor (`ai::ops`); the LLM client and agent loop remain upstream-only.
 - **JSON search** — ⌘/Ctrl+F in the JSON formatter opens a scoped search bar
   (key context `"JsonPanel"`, so it never overrides the Markdown editor's find);
   the panel root is focused on view switch so the shortcut works immediately.
