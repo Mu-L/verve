@@ -125,6 +125,7 @@ use crate::ui::request_panel::RequestPanel;
 use crate::ui::response_panel::ResponsePanel;
 use crate::ui::share_dialog;
 use crate::ui::share_panel::{ShareEvent, SharePanel};
+use crate::ui::ssh_panel::SshPanel;
 
 // ---- submodule declarations (impl VerveApp blocks live in siblings) ----
 mod actions;
@@ -152,6 +153,8 @@ pub struct VerveApp {
     pub project_manage: Entity<ProjectManagePanel>,
     /// Document-sharing management panel (文档管理).
     pub share: Entity<SharePanel>,
+    /// SSH management panel (主机卡片 + 终端).
+    pub ssh: Entity<SshPanel>,
     /// HTTP proxy / traffic capture panel.
     pub proxy: Entity<ProxyPanel>,
     /// Hosts quick editor panel.
@@ -290,6 +293,8 @@ pub enum SideView {
     ProjectManage,
     /// Document-sharing management (文档管理).
     Share,
+    /// SSH connection management (SSH 管理).
+    Ssh,
     /// HTTP proxy / traffic capture.
     Proxy,
     /// Hosts quick editor.
@@ -302,6 +307,7 @@ impl SideView {
     /// All rail-selectable views, in rail order.
     pub const ALL: &'static [SideView] = &[
         SideView::Api,
+        SideView::Ssh,
         SideView::Share,
         SideView::Mock,
         SideView::ProjectManage,
@@ -313,13 +319,13 @@ impl SideView {
 
     /// The daily-workflow views with fixed ⌘/Ctrl+1..=5 rail-switch shortcuts,
     /// in key order. Mirrors the Community Edition's positioning (HTTP
-    /// debugging, mock, JSON, capture, hosts).
+    /// debugging, SSH, mock, JSON, capture).
     pub const SHORTCUT_VIEWS: &'static [SideView] = &[
         SideView::Api,
-        SideView::Mock,
+        SideView::Ssh,
         SideView::JsonFormat,
+        SideView::Mock,
         SideView::Proxy,
-        SideView::Hosts,
     ];
 
     /// A stable string key for persistence.
@@ -330,6 +336,7 @@ impl SideView {
             SideView::Mock => "Mock",
             SideView::ProjectManage => "ProjectManage",
             SideView::Share => "Share",
+            SideView::Ssh => "Ssh",
             SideView::Proxy => "Proxy",
             SideView::Hosts => "Hosts",
             SideView::JsonFormat => "JsonFormat",
@@ -343,6 +350,7 @@ impl SideView {
             "Mock" => SideView::Mock,
             "ProjectManage" => SideView::ProjectManage,
             "Share" => SideView::Share,
+            "Ssh" => SideView::Ssh,
             "Proxy" => SideView::Proxy,
             "Hosts" => SideView::Hosts,
             "JsonFormat" => SideView::JsonFormat,
@@ -358,6 +366,7 @@ impl SideView {
             SideView::Mock => rust_i18n::t!("view.mock").to_string(),
             SideView::ProjectManage => rust_i18n::t!("view.project_manage").to_string(),
             SideView::Share => rust_i18n::t!("view.share").to_string(),
+            SideView::Ssh => rust_i18n::t!("view.ssh").to_string(),
             SideView::Proxy => "抓包".to_string(),
             SideView::Hosts => rust_i18n::t!("view.hosts").to_string(),
             SideView::JsonFormat => rust_i18n::t!("view.json_format").to_string(),
@@ -555,6 +564,7 @@ impl Render for VerveApp {
         let response = self.response.clone();
         let console = self.console.clone();
         let project_manage = self.project_manage.clone();
+        let ssh = self.ssh.clone();
         let share = self.share.clone();
 
         // Restore saved sizes (if any) for the initial render. The center column
@@ -589,6 +599,7 @@ impl Render for VerveApp {
             SideView::History => console.clone().into_any_element(),
             SideView::ProjectManage
             | SideView::Share
+            | SideView::Ssh
             | SideView::Proxy
             | SideView::Hosts
             | SideView::JsonFormat
@@ -657,6 +668,7 @@ impl Render for VerveApp {
             self.active_view,
             SideView::ProjectManage
                 | SideView::Share
+                | SideView::Ssh
                 | SideView::Proxy
                 | SideView::Hosts
                 | SideView::JsonFormat
@@ -687,6 +699,7 @@ impl Render for VerveApp {
                         let panel: gpui::AnyElement = match self.active_view {
                             SideView::ProjectManage => project_manage.clone().into_any_element(),
                             SideView::Share => share.clone().into_any_element(),
+                            SideView::Ssh => ssh.clone().into_any_element(),
                             SideView::Proxy => self.proxy.clone().into_any_element(),
                             SideView::Hosts => self.hosts.clone().into_any_element(),
                             SideView::JsonFormat => self.json.clone().into_any_element(),

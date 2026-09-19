@@ -2,6 +2,41 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.8.0] - 2026-09-19
+
+> 🎉 **The SSH / SFTP terminal is now open-source** — the full SSH module
+> joins the Community Edition, and the Pro Edition is renamed to the
+> **Pioneer Edition**. Version follows upstream 0.8.0.
+
+### ✨ Added (SSH open-source)
+
+- **SSH terminal** — host cards with password / private-key auth, multi-tab
+  sessions, full ANSI / xterm-256color emulation (true color, IME), double-click
+  word selection, scrollback buffer with clear-history, and a local terminal
+  mode (spawn the user's shell in a PTY, no host needed).
+- **Jump host / bastion** — ProxyJump with chained `direct-tcpip` tunnels.
+- **SFTP file browser** — list / mkdir / rename / upload / download, recursive
+  directory removal **and recursive directory upload**, 64 KiB chunked streaming
+  with progress.
+- **Zmodem** — in-terminal `rz` / `sz` transfer via `\x18B` handshake framing.
+- **SSH local port forwarding** (`-L`) — one-click expose an internal service.
+- **TOFU `known_hosts`** verification — host-key mismatch refuses to connect.
+- **MFA / 2FA** — `keyboard-interactive` auth for TOTP / OTP / hardware keys,
+  including "password + OTP" pairing and skip-MFA on duplicate session.
+- **Secure credential storage** — OS keychain + AES-256-GCM / Argon2id
+  encrypted vault; `ssh_hosts.json`, `ssh_vault.bin`, and `device.key` are
+  excluded from git sync.
+- **Disconnect/reconnect fix** — terminals recover cleanly after the connection
+  drops.
+- SSH joins the rail at ⌘/Ctrl+**2** (one-time rail reorder; Hosts remains
+  reachable from the rail).
+
+### 🔧 Enhancements (synced from upstream)
+
+- **JSON search** — ⌘/Ctrl+F in the JSON formatter opens a scoped search bar
+  (key context `"JsonPanel"`, so it never overrides the Markdown editor's find);
+  the panel root is focused on view switch so the shortcut works immediately.
+
 ## [0.7.2] - 2026-09-05
 
 ### 🔧 Enhancements (synced from upstream)

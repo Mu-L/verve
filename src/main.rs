@@ -119,6 +119,9 @@ fn launch_main_app(cx: &mut App) {
         KeyBinding::new("cmd-shift-n", ui::app::NewRequest, None),
         // Close the active request tab (cmd-w).
         KeyBinding::new("cmd-w", ui::app::CloseFile, None),
+        // JSON panel search bar. Scoped to the "JsonPanel" key context so it
+        // never overrides the Markdown editor's own Cmd+F find.
+        KeyBinding::new("cmd-f", ui::json_panel::JsonFind, Some("JsonPanel")),
     ]);
     cx.bind_keys(ui::app::rail_slot_keybindings("cmd"));
     #[cfg(not(target_os = "macos"))]
@@ -127,6 +130,8 @@ fn launch_main_app(cx: &mut App) {
         KeyBinding::new("ctrl-s", ui::app::SaveWorkspace, None),
         KeyBinding::new("ctrl-shift-n", ui::app::NewRequest, None),
         KeyBinding::new("ctrl-w", ui::app::CloseFile, None),
+        // JSON panel search bar (see the macOS block for the context rationale).
+        KeyBinding::new("ctrl-f", ui::json_panel::JsonFind, Some("JsonPanel")),
     ]);
     cx.bind_keys(ui::app::rail_slot_keybindings("ctrl"));
 

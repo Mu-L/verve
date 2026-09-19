@@ -36,6 +36,7 @@ impl VerveApp {
     pub(super) fn rail_icon_for(view: SideView) -> Icon {
         match view {
             SideView::Api => IconName::Network.into(),
+            SideView::Ssh => IconName::SquareTerminal.into(),
             SideView::Proxy => IconName::Globe.into(),
             SideView::Share => vicon(DOCS),
             SideView::Hosts => vicon(SERVER),
@@ -85,10 +86,17 @@ impl VerveApp {
     pub(super) fn activate_view(
         &mut self,
         view: SideView,
-        _window: &mut Window,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) {
         self.active_view = view;
+        // Focus the panel root so its "JsonPanel" key context is active —
+        // Cmd/Ctrl+F opens the search bar immediately after switching,
+        // without requiring a click inside the view first.
+        if view == SideView::JsonFormat {
+            let handle = self.json.read(cx).focus_handle(cx);
+            window.focus(&handle, cx);
+        }
         cx.notify();
     }
 

@@ -39,6 +39,7 @@ impl VerveApp {
         let theme = cx.theme().clone();
         let bar = match self.active_view {
             SideView::JsonFormat => self.render_json_title_bar(cx).into_any_element(),
+            SideView::Ssh => self.render_ssh_title_bar(cx).into_any_element(),
             _ => self.render_api_title_bar(cx).into_any_element(),
         };
         // The gpui-component TitleBar owns the cross-platform window chrome:
@@ -790,6 +791,67 @@ impl VerveApp {
     /// and the primary "new host" action — plus the app-level update/language
     /// controls. Height, padding, and the leading rail toggle match
     /// `render_api_title_bar` exactly, so nothing shifts on view switch.
+    pub(super) fn render_ssh_title_bar(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = cx.theme().clone();
+        let host_count = self.ssh.read(cx).host_count();
+        let ssh = self.ssh.clone();
+
+        h_flex()
+            // The outer TitleBar (render_title_bar) owns the height, left
+            // padding, border, and background — including the platform window
+            // controls on Windows/Linux.
+            .h_full()
+            .w_full()
+            .min_w_0()
+            .pr_3()
+            .gap_2()
+            .items_center()
+            .child(self.render_rail_toggle(cx))
+            // SSH context: terminal icon + title + saved-host count badge.
+            .child(
+                h_flex()
+                    .gap(px(6.))
+                    .items_center()
+                    .child(
+                        div()
+                            .text_color(theme.primary)
+                            .child(IconName::SquareTerminal),
+                    )
+                    .child(
+                        div()
+                            .text_sm()
+                            .font_weight(FontWeight::SEMIBOLD)
+                            .child("SSH 管理"),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(11.))
+                            .px(px(6.))
+                            .py(px(2.))
+                            .rounded(px(4.))
+                            .bg(theme.accent.opacity(0.2))
+                            .text_color(theme.foreground)
+                            .child(format!("{host_count} 台主机")),
+                    ),
+            )
+            .child(div().flex_1())
+            .child(title_bar_control(
+                "ssh-title-new-host-hitbox",
+                Button::new("ssh-title-new-host")
+                    .primary()
+                    .small()
+                    .icon(IconName::Plus)
+                    .label("新建主机")
+                    .on_click(cx.listener(move |_, _, window, cx| {
+                        let _ = ssh.update(cx, |panel, cx| {
+                            panel.open_new_host(window, cx);
+                        });
+                    })),
+            ))
+            .child(self.render_update_button(cx))
+            .child(self.render_lang_picker(cx))
+    }
+
     /// cmd-o — open a Markdown file in the markdown editor view.
     pub(super) fn render_json_title_bar(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.theme().clone();

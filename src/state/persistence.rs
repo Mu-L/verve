@@ -200,7 +200,8 @@ pub fn set_active_workspace(id: &str) {
 
 /// The `.gitignore` content excluding cross-branch / non-data / machine-local files from git.
 /// layout.json is now tracked (shared settings); layout.local.json contains machine-specific panel sizes.
-const GITIGNORE: &str = "workspaces.json\nlayout.local.json\nshares.json\n.verve-askpass.sh\nexports/\nhosts.staging\n.bootstrap_done\n";
+/// SSH files hold host credentials and the encrypted vault key — never commit them.
+const GITIGNORE: &str = "workspaces.json\nlayout.local.json\nshares.json\nssh_hosts.json\nssh_vault.bin\ndevice.key\n.verve-askpass.sh\nexports/\nhosts.staging\n.bootstrap_done\n";
 
 /// Ensure `~/.verve/.gitignore` exists with the right exclusions. Called once
 /// when the git repo is initialised so cross-branch files don't leak into
@@ -215,6 +216,7 @@ pub fn ensure_gitignore() {
             !existing.contains("workspaces.json")
                 || !existing.contains("layout.local.json")
                 || !existing.contains("shares.json")
+                || !existing.contains("ssh_hosts.json")
                 || existing.contains("layout.json\n")
         }
         Err(_) => true,
@@ -298,6 +300,12 @@ pub struct PanelLayout {
     /// has been applied.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rail_shortcut_migrated: Option<bool>,
+    /// Second one-time rail reorder (SSH open-source release): the shortcut
+    /// set changed (Ssh in, Hosts out), so missing shortcut views are inserted
+    /// at their key position. Runs once for installs that already applied the
+    /// first migration.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rail_shortcut_migrated_v2: Option<bool>,
     /// Left-sidebar widths (px) for panels with a fixed left tree/list.
     /// Each slot is optional so absent = panel default.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -589,6 +597,23 @@ pub fn mark_rail_shortcut_migrated() {
     let mut layout = load_layout().unwrap_or_default();
     if layout.rail_shortcut_migrated != Some(true) {
         layout.rail_shortcut_migrated = Some(true);
+        let _ = save_layout(&layout);
+    }
+}
+
+/// Whether the second one-time rail reorder (SSH open-source shortcut change)
+/// has run.
+pub fn rail_shortcut_migrated_v2() -> bool {
+    load_layout()
+        .and_then(|l| l.rail_shortcut_migrated_v2)
+        .unwrap_or(false)
+}
+
+/// Mark the second one-time rail reorder as done.
+pub fn mark_rail_shortcut_migrated_v2() {
+    let mut layout = load_layout().unwrap_or_default();
+    if layout.rail_shortcut_migrated_v2 != Some(true) {
+        layout.rail_shortcut_migrated_v2 = Some(true);
         let _ = save_layout(&layout);
     }
 }

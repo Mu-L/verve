@@ -19,6 +19,7 @@ use crate::ui::response_panel::ResponsePanel;
 use crate::ui::project_manage_panel::ProjectManagePanel;
 use crate::share::models::ShareScope;
 use crate::ui::share_panel::{ShareEvent, SharePanel};
+use crate::ui::ssh_panel::SshPanel;
 use super::{SideView, VerveApp};
 
 impl VerveApp {
@@ -125,6 +126,7 @@ impl VerveApp {
         let project_manage =
             cx.new(|cx| ProjectManagePanel::new(git.clone(), state.clone(), window, cx));
         let share = cx.new(|cx| SharePanel::new(state.clone(), window, cx));
+        let ssh = cx.new(|cx| SshPanel::new(window, cx));
         let proxy = cx.new(|cx| ProxyPanel::new(window, cx));
         let hosts = cx.new(|cx| HostsPanel::new(state.clone(), window, cx));
         let json = cx.new(|cx| JsonPanel::new(window, cx));
@@ -171,6 +173,7 @@ impl VerveApp {
             git,
             project_manage,
             share,
+            ssh,
             proxy,
             hosts,
             json,
@@ -233,10 +236,10 @@ impl VerveApp {
                 // One-time reorder: put the fixed-shortcut views (⌘1..⌘5) at
                 // the front so the rail matches the key order. Runs once (not
                 // every launch) so later drag-to-reorder isn't overridden.
-                if !crate::state::persistence::rail_shortcut_migrated() {
+                if !crate::state::persistence::rail_shortcut_migrated_v2() {
                     shortcut_first_rail_order(&mut order);
                     crate::state::persistence::save_rail_order(&order);
-                    crate::state::persistence::mark_rail_shortcut_migrated();
+                    crate::state::persistence::mark_rail_shortcut_migrated_v2();
                 }
                 order
             },
@@ -589,7 +592,10 @@ impl VerveApp {
 }
 
 /// Reorder rail names so the fixed-shortcut views (`SideView::SHORTCUT_VIEWS`)
-/// come first in key order, preserving the relative order of the rest.
+/// come first in key order, preserving the relative order of the rest. Views
+/// that gained a fixed shortcut since install (e.g. the newly open-sourced
+/// Ssh) are missing from older saved orders — they are inserted at their key
+/// position so ⌘N matches the visible rail top.
 fn shortcut_first_rail_order(order: &mut Vec<String>) {
     let shortcut_names: Vec<&str> = SideView::SHORTCUT_VIEWS.iter().map(|v| v.name()).collect();
     let mut front: Vec<String> = Vec::new();
@@ -599,6 +605,13 @@ fn shortcut_first_rail_order(order: &mut Vec<String>) {
             front.push(name);
         } else {
             rest.push(name);
+        }
+    }
+    // Insert shortcut views missing from the saved order (new installs and
+    // upgraded ones alike end up with the full shortcut set at the front).
+    for name in &shortcut_names {
+        if !front.iter().any(|f| f == name) {
+            front.push(name.to_string());
         }
     }
     front.sort_by_key(|n| {
@@ -624,7 +637,7 @@ mod tests {
             .map(|s| s.to_string())
             .collect();
         shortcut_first_rail_order(&mut order);
-        let expected: Vec<String> = ["Api", "Mock", "JsonFormat", "Hosts", "Share", "History"]
+        let expected: Vec<String> = ["Api", "Ssh", "JsonFormat", "Mock", "Proxy", "Share", "History", "Hosts"]
             .iter()
             .map(|s| s.to_string())
             .collect();

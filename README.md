@@ -4,13 +4,13 @@
 
 # ⚡ Verve
 
-**A native, GPU-accelerated developer workbench built with Rust + GPUI — unifying API debugging, traffic capture, an SSH/SFTP terminal (jump host / port forwarding), Docker & K8s log inspection, stress & automated testing, mock, a Markdown notes editor & PDF, hosts and JSON tools in a single window.**
+**A native, GPU-accelerated developer workbench built with Rust + GPUI — unifying API debugging, traffic capture, an SSH/SFTP terminal (jump host / port forwarding / Zmodem), mock, hosts, and JSON tools in a single window.**
 
 ### A native developer workbench
 
 Verve is built on **Rust + [GPUI](https://github.com/zed-industries/zed)** (the same GPU-accelerated UI framework that powers the Zed editor) — not Electron. The whole app is rendered on the GPU, starts in under a second, and stays well under 100 MB of RAM, so it stays responsive even while streaming container logs or running a load test.
 
-`API & Testing` · `Terminal & Triage` · `Mock & Capture` · `Docs & Git` · `Notes` · `Hosts` · `JSON`
+`API & Testing` · `SSH Terminal` · `Mock & Capture` · `Docs & Git` · `Hosts` · `JSON`
 
 <br/>
 
@@ -21,7 +21,7 @@ Verve is built on **Rust + [GPUI](https://github.com/zed-industries/zed)** (the 
   <img src="https://img.shields.io/github/v/release/aios-pub/verve?style=flat-square&label=latest%20release&labelColor=0a0c10&color=d4e317" alt="Latest release" />
 </a>
 <a href="https://github.com/aios-pub/verve">
-  <img src="https://img.shields.io/badge/license-AGPL--3.0%20%2F%20Pro-d4e317?style=flat-square&labelColor=0a0c10" alt="License" />
+  <img src="https://img.shields.io/badge/license-AGPL--3.0%20%2F%20Pioneer-d4e317?style=flat-square&labelColor=0a0c10" alt="License" />
 </a>
 
 <br/>
@@ -43,7 +43,7 @@ Verve is built on **Rust + [GPUI](https://github.com/zed-industries/zed)** (the 
 
 <br/>
 
-[Features](#-features) · [Community vs Pro](#-community-vs-pro) · [Community Updates](#-community-edition--recent-iterations) · [Pro Updates](#-pro-edition--recent-iterations) · [Getting Started](#-getting-started) · [Pro Edition](#-pro-edition--sponsor-to-unlock)
+[Features](#-features) · [Community vs Pioneer](#-community-vs-pioneer) · [Community Updates](#-community-edition--recent-iterations) · [Pioneer Updates](#-pioneer-edition--recent-iterations) · [Getting Started](#-getting-started) · [Pioneer Edition](#-pioneer-edition--sponsor-to-unlock)
 
 </div>
 
@@ -66,33 +66,33 @@ What this means for you: instant responses when debugging APIs, fluid terminals 
 
 ## 🆍 Two Editions
 
-Verve comes in two editions, with the same native app and the same daily API workflow — the Pro Edition adds server triage, testing, knowledge tooling, and cloud sharing on top.
+Verve comes in two editions, with the same native app and the same daily API workflow — the Pioneer Edition adds container & cluster inspection (Docker / Kubernetes), testing, knowledge tooling, and cloud sharing on top.
 
 ### 🆍 Community Edition — Free & Open-Source
 
-The **Community Edition** is free and released under the **AGPL-3.0** license. It covers everything an individual developer needs for daily API work: full HTTP debugging (incl. multi-protocol clients), traffic capture, JSON formatting, hosts management, local mock server, local document sharing, **and Git-based cross-machine sync** — in a fast, lightweight native app. It is intentionally strong enough to stand on its own against any individual API client.
+The **Community Edition** is free and released under the **AGPL-3.0** license. It covers everything an individual developer needs for daily work: full HTTP debugging (incl. multi-protocol clients), traffic capture, JSON formatting, hosts management, local mock server, local document sharing, **an SSH/SFTP terminal (jump host / port forwarding / Zmodem)**, **and Git-based cross-machine sync** — in a fast, lightweight native app. It is intentionally strong enough to stand on its own against any individual API client or SSH terminal tool.
 
-### 💎 Pro Edition — Sponsor to Unlock
+### 💎 Pioneer Edition — Sponsor to Unlock
 
-The **Pro Edition** is obtained via **sponsorship** (early-bird **¥99**, regular **¥199**). It layers on the advanced, professional capabilities an individual API client doesn't cover: server triage (**SSH / Docker / Kubernetes pod inspection**), **stress testing** and **automated test suites**, a **Markdown notes & file editor** (replaces tools like MarkText), a **PDF viewer/editor**, and **cloud document sharing** (push to a self-hosted `verve-server` for a public URL).
+The **Pioneer Edition** is obtained via **sponsorship** (early-bird **¥99**, regular **¥199**). It layers on the advanced capabilities a single-purpose tool doesn't cover: container & cluster inspection (**Docker / Kubernetes pods**), **stress testing** and **automated test suites**, a **Markdown notes & file editor** (replaces tools like MarkText), a **PDF viewer/editor**, and **cloud document sharing** (push to a self-hosted `verve-server` for a public URL).
 
-→ Full feature comparison: [Community vs Pro](#-community-vs-pro)
-→ How to get it: [Pro Edition](#-pro-edition--sponsor-to-unlock)
+→ Full feature comparison: [Community vs Pioneer](#-community-vs-pioneer)
+→ How to get it: [Pioneer Edition](#-pioneer-edition--sponsor-to-unlock)
 
 ---
 
-## 🆚 Community vs Pro
+## 🆚 Community vs Pioneer
 
-**Edition principle**: the Community Edition covers everything an individual developer needs for daily, standalone API work (strong enough to compete head-on with Postman). The Pro Edition layers on professional capabilities beyond individual API debugging — server triage, testing, knowledge tooling, and cloud deployment.
+**Edition principle**: the Community Edition covers everything an individual developer needs for daily, standalone API and server-terminal work (strong enough to compete head-on with Postman or Termius). The Pioneer Edition layers on professional capabilities beyond individual API debugging — container & cluster inspection, testing, knowledge tooling, and cloud deployment.
 
-> ✅ Included in both · ❌ Not in this edition · 💎 Pro-only feature
+> ✅ Included in both · ❌ Not in this edition · 💎 Pioneer-only feature
 
 ### Overview
 
-| | 🆍 Community Edition | 💎 Pro Edition |
+| | 🆍 Community Edition | 💎 Pioneer Edition |
 |---|---|---|
-| **Positioning** | Individual developer's daily API toolbox | Toolbox + server triage + testing + knowledge + cloud |
-| **License** | AGPL-3.0 (open-source) | Proprietary (Verve Pro License) |
+| **Positioning** | Individual developer's daily API + SSH terminal toolbox | Toolbox + containers/clusters + testing + knowledge + cloud |
+| **License** | AGPL-3.0 (open-source) | Proprietary (Verve Pioneer License) |
 | **Source code** | Open & auditable | Closed |
 | **How to get** | Free download / build from source | Sponsor ¥99 early-bird / ¥199 regular |
 | **Audience** | Individual devs, students, OSS community | Pro devs, ops engineers, small teams |
@@ -100,7 +100,7 @@ The **Pro Edition** is obtained via **sponsorship** (early-bird **¥99**, regula
 
 ### 🧪 API & Testing
 
-| Feature | Community | Pro |
+| Feature | Community | Pioneer |
 |---|:---:|:---:|
 | HTTP API debugging (GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS) | ✅ | ✅ |
 | Request body (none / form-data / x-www-form-urlencoded / raw JSON·XML·Text·HTML·JS) | ✅ | ✅ |
@@ -120,7 +120,7 @@ The **Pro Edition** is obtained via **sponsorship** (early-bird **¥99**, regula
 
 ### 🛠️ Dev Utilities
 
-| Feature | Community | Pro |
+| Feature | Community | Pioneer |
 |---|:---:|:---:|
 | JSON formatter (collapsible tree) | ✅ | ✅ |
 | Hosts manager (read `/etc/hosts`, profiles, env binding) | ✅ | ✅ |
@@ -129,21 +129,21 @@ The **Pro Edition** is obtained via **sponsorship** (early-bird **¥99**, regula
 | Import (Postman v2.1 / OpenAPI 3 / Swagger 2.0 / Postman 7+) | ✅ | ✅ |
 | Export (Markdown / JSON / Postman, round-trip) | ✅ | ✅ |
 
-### 🖥️ Server Triage (Pro-only)
+### 🖥️ Server Triage (SSH open-source · Docker/K8s Pioneer-only)
 
-The server-triage features are scoped to the daily triage workflow — inspecting, logging, and exec-ing into running targets. They are **not** full cluster lifecycle managers (no resource creation, no deployment management).
+The server-triage features are scoped to the daily triage workflow — inspecting, logging, and exec-ing into running targets. They are **not** full cluster lifecycle managers (no resource creation, no deployment management). The **SSH / SFTP terminal capabilities are fully open-source** and ship free with the Community Edition.
 
-| Feature | Community | Pro |
+| Feature | Community | Pioneer |
 |---|:---:|:---:|
-| **SSH terminal** — password / private-key auth, multi-tab sessions | ❌ | 💎 |
-| Terminal emulation — full ANSI / xterm-256color (16-color + 256-color + true color) | ❌ | 💎 |
-| Paste (Cmd/Ctrl+V) · terminal text copy · host card management | ❌ | 💎 |
-| Jump host / bastion (ProxyJump, chained `direct-tcpip` tunnels) | ❌ | 💎 |
-| **SFTP** — list / mkdir / rename / upload / download, recursive `rm -rf`, transfer progress | ❌ | 💎 |
-| **Zmodem** — in-terminal `rz` / `sz` file transfer | ❌ | 💎 |
-| **SSH local port forwarding** (`-L`, one-click expose an internal service) | ❌ | 💎 |
-| TOFU `known_hosts` verification (refuses host-key mismatch) | ❌ | 💎 |
-| **Secure credential storage** — OS keychain + AES-256-GCM / Argon2id encrypted vault | ❌ | 💎 |
+| **SSH terminal** — password / private-key auth, multi-tab sessions | ✅ | ✅ |
+| Terminal emulation — full ANSI / xterm-256color (16-color + 256-color + true color) | ✅ | ✅ |
+| Paste (Cmd/Ctrl+V) · terminal text copy · host card management | ✅ | ✅ |
+| Jump host / bastion (ProxyJump, chained `direct-tcpip` tunnels) | ✅ | ✅ |
+| **SFTP** — list / mkdir / rename / upload / download, recursive `rm -rf`, transfer progress | ✅ | ✅ |
+| **Zmodem** — in-terminal `rz` / `sz` file transfer | ✅ | ✅ |
+| **SSH local port forwarding** (`-L`, one-click expose an internal service) | ✅ | ✅ |
+| TOFU `known_hosts` verification (refuses host-key mismatch) | ✅ | ✅ |
+| **Secure credential storage** — OS keychain + AES-256-GCM / Argon2id encrypted vault | ✅ | ✅ |
 | **Docker** — list / start / stop / restart / remove containers, list & prune images | ❌ | 💎 |
 | Docker — `docker logs -f` log streaming, `docker exec -it` (real PTY, multi-tab) | ❌ | 💎 |
 | Docker — remote daemon via `DOCKER_HOST` or **SSH tunnel** (`docker system dial-stdio`) | ❌ | 💎 |
@@ -155,7 +155,7 @@ The server-triage features are scoped to the daily triage workflow — inspectin
 
 ### 📝 Docs & Knowledge (split)
 
-| Feature | Community | Pro |
+| Feature | Community | Pioneer |
 |---|:---:|:---:|
 | **Document sharing — local generation** (self-contained HTML from project/folder/request) | ✅ | ✅ |
 | Document sharing — QR code + link + HTML export | ✅ | ✅ |
@@ -166,9 +166,9 @@ The server-triage features are scoped to the daily triage workflow — inspectin
 | **PDF viewer / editor** (Pdfium native, text/image/erase/page ops) — replaces a standalone PDF editor | ❌ | 💎 |
 | **Standalone Markdown file editor** (multi-tab, Finder double-click / `verve file.md`) — replaces tools like MarkText | ❌ | 💎 |
 
-### 🌍 Cloud Sharing (Pro-only)
+### 🌍 Cloud Sharing (Pioneer-only)
 
-| Feature | Community | Pro |
+| Feature | Community | Pioneer |
 |---|:---:|:---:|
 | **Self-hosted `verve-server`** (standalone binary, binds `0.0.0.0`, file-backed store) | ❌ | 💎 |
 | **Cloud document sharing** — push a project to remote `verve-server`, get a public `/s/<id>` URL | ❌ | 💎 |
@@ -178,10 +178,10 @@ The server-triage features are scoped to the daily triage workflow — inspectin
 
 ### 📄 Licensing & Usage Rights
 
-| | Community | Pro |
+| | Community | Pioneer |
 |---|---|---|
 | **How to get** | Free download / build from source | Sponsor ¥99 early-bird / ¥199 regular |
-| **License type** | AGPL-3.0 | Proprietary (Verve Pro License) |
+| **License type** | AGPL-3.0 | Proprietary (Verve Pioneer License) |
 | **Source visible** | ✅ Open | ❌ Closed |
 | **Personal use** | ✅ | ✅ |
 | **Commercial use** | ✅ | ✅ (after sponsorship) |
@@ -194,8 +194,8 @@ The server-triage features are scoped to the daily triage workflow — inspectin
 
 ### Which one should I pick?
 
-- **Community Edition** — you're an individual developer or student whose daily work is debugging APIs (including gRPC/WebSocket/SSE), capturing traffic, formatting JSON, managing hosts, running local mocks, sharing docs locally, and keeping your workspace in sync across machines; you want a fast, open, free native toolbox that can fully replace an individual API client.
-- **Pro Edition** — you also need to SSH into servers to triage, tail Docker/K8s logs, run stress and automated tests, take Markdown notes / edit Markdown & PDF files, or share documents at a public cloud URL.
+- **Community Edition** — you're an individual developer or student whose daily work is debugging APIs (including gRPC/WebSocket/SSE), working over SSH/SFTP (jump host, port forwarding, Zmodem), capturing traffic, formatting JSON, managing hosts, running local mocks, sharing docs locally, and keeping your workspace in sync across machines; you want a fast, open, free native toolbox that can fully replace an individual API client and an SSH terminal.
+- **Pioneer Edition** — you also need to tail Docker/K8s logs, run stress and automated tests, take Markdown notes / edit Markdown & PDF files, or share documents at a public cloud URL.
 
 ---
 
@@ -257,7 +257,7 @@ The server-triage features are scoped to the daily triage workflow — inspectin
 - QR code sharing + link sharing + HTML export
 - Strict access control: expiration + password protection (enforced by the local server)
 - Field-level display toggles (9 switches: description / params / headers / body / auth / cookies / path / examples / mock)
-- **Pushing to a remote `verve-server` for a public URL is a Pro-only feature** — see [Cloud Sharing](#-cloud-sharing-pro-only)
+- **Pushing to a remote `verve-server` for a public URL is a Pro-only feature** — see [Cloud Sharing](#-cloud-sharing-pioneer-only)
 
 ### 🌍 Git Cross-Machine Sync
 <div align="center">
@@ -299,7 +299,7 @@ The server-triage features are scoped to the daily triage workflow — inspectin
 
 ---
 
-### 💎 Pro Edition Features
+### 💎 Pioneer Edition Features
 
 ### 🔐 SSH Terminal
 <div align="center">
@@ -423,7 +423,7 @@ The server-triage features are scoped to the daily triage workflow — inspectin
 
 ### 📦 Self-hosted `verve-server` (Cloud Sharing)
 
-The Pro Edition ships a standalone server binary for hosting shared documents in the cloud, with an admin Web UI for uploading projects and managing share links.
+The Pioneer Edition ships a standalone server binary for hosting shared documents in the cloud, with an admin Web UI for uploading projects and managing share links.
 
 - Binds `0.0.0.0`, file-backed store under `<data>/cloud/`
 - **Cloud document sharing** — push a project JSON to the remote server and get a public `/s/<id>` URL (Bearer-token authenticated upload)
@@ -452,9 +452,9 @@ See [`docs/verve-server.md`](./docs/verve-server.md) for the full deployment gui
     (Or run `./scripts/install-deps.sh`, which picks the right package manager.)
 - On first launch, Verve auto-creates its data directory with a demo project so you can explore right away.
 
-### 💎 Pro Edition
+### 💎 Pioneer Edition
 
-The Pro Edition (pre-compiled binaries + continuous updates + priority support) is obtained via sponsorship. See the [Pro Edition](#-pro-edition--sponsor-to-unlock) section below.
+The Pioneer Edition (pre-compiled binaries + continuous updates + priority support) is obtained via sponsorship. See the [Pioneer Edition](#-pioneer-edition--sponsor-to-unlock) section below.
 
 ---
 
@@ -472,10 +472,12 @@ The Pro Edition (pre-compiled binaries + continuous updates + priority support) 
 
 ## 🆕 Community Edition — Recent Iterations
 
-The Community Edition keeps improving too. This is a transparent log of what has landed in the free, open-source build (the same code in this repo). Pro-only features (SSH / Docker / K8s / notes / PDF / testing) are listed separately below.
+The Community Edition keeps improving too. This is a transparent log of what has landed in the free, open-source build (the same code in this repo). Pioneer-only features (Docker / K8s / notes / PDF / testing) are listed separately below.
 
 > Last updated: 2026-09
 
+- **SSH / SFTP terminal is now open-source** 🎉 — the full SSH module joins the Community Edition: host cards, multi-tab terminals (full ANSI / xterm-256color, double-click word selection, scrollback), jump-host/bastion tunnels, SFTP file browsing (incl. recursive directory upload), in-terminal Zmodem `rz`/`sz`, one-click local port forwarding, local terminal mode, TOFU `known_hosts` verification, MFA / 2FA (`keyboard-interactive`) auth, and OS-keychain + AES-256-GCM / Argon2id encrypted credential storage — free for everyone, and now fixed for SSH disconnect/reconnect. SSH gets the ⌘2 rail slot.
+- **JSON search** — ⌘/Ctrl+F in the JSON formatter opens a search bar that filters/matches JSON paths instantly (scoped key context so it never collides with the Markdown editor's find).
 - **Save file-stream responses** — attachment / octet-stream responses keep their raw bytes (no UTF-8 corruption) and a「保存文件」button in the status bar opens a native save dialog; server-sent filenames are decoded (RFC 5987) and sanitized.
 - **Multipart upload fixes** — your own `Content-Type` on a form-data part is honored (no duplicate header), names/filenames are escaped against header injection, and copy-as-curl emits proper `-F` parts; the actual-request panel shows parts structurally instead of binary mojibake.
 - **Calmer file picking** — form-data file rows pick a file by clicking the value cell; switching the row type to File no longer auto-opens a dialog.
@@ -510,9 +512,9 @@ The Community Edition keeps improving too. This is a transparent log of what has
 
 ---
 
-## 🆕 Pro Edition — Recent Iterations
+## 🆕 Pioneer Edition — Recent Iterations
 
-The Pro Edition ships new work almost every day. This section is a transparent log of recent Pro-side iterations, so the community can see exactly what's being built on top of the free Community Edition. (Community Edition users get the full daily API workflow for free; these land in the Pro build.)
+The Pioneer Edition ships new work almost every day. This section is a transparent log of recent Pro-side iterations, so the community can see exactly what's being built on top of the free Community Edition. (Community Edition users get the full daily API workflow for free; these land in the Pro build.)
 
 > Last updated: 2026-09
 
@@ -521,16 +523,6 @@ The Pro Edition ships new work almost every day. This section is a transparent l
 - **Built-in AI assistant** — a floating assistant panel (⌘J, drag / resize / minimize-to-edge) with multi-provider LLM support (OpenAI-compatible; streaming, tool calls, usage & price display, 429 auto-retry). Plan mode (writes need approval) vs full access, agent loop with progressive context loading and auto-compaction, Codex-style working plan that survives compaction, progressively loaded skills with autonomous switching, backup-validate-rollback on AI writes, and file paste support (images to vision; Word/PDF/Office converted via `anydoc`; online doc URLs fetched). API keys live in the encrypted local vault.
 - **Markdown requirement docs** — Markdown nodes in the project tree become first-class requirement documents with doc ⇄ API link chips (both directions), AI-assisted extraction ("AI 智能提取 API 文档" import cards), and an embedded wysiwyg editor.
 - **Searchable help center** — a built-in help center (⌘/ / F1) covering every view and keyboard shortcut, including the user's custom shortcut overrides (the same table that registers the real bindings); searchable, with Esc-aware view switching.
-
-### 🔐 SSH Terminal
-
-- **SFTP directory upload** — upload whole folders recursively from the SFTP browser, plus terminal interaction refinements.
-- **MFA / 2FA authentication** — new `keyboard-interactive` auth type for TOTP / OTP / hardware-key servers. The verification code is prompted dynamically at connect time, and "password + OTP" pairing is supported (account password first, then the OTP).
-- **Duplicate session** — clone an SSH session into a fresh, independent tab (own socket & session id). It reuses the already-authenticated connection, so an MFA-protected host won't ask for a second OTP (skip-MFA on duplicate).
-- **Double-click word selection** in the terminal.
-- **Scrollback buffer**, clear-history purge, and monospace fill for the terminal.
-- **Local terminal mode** — run a local shell directly in the SSH panel (no host needed), with caret positioning and modifier-key support (per-OS input handling for macOS/Linux/Windows).
-- **Smarter connection errors** — failures are classified (auth / network / timeout) with a hint to grant macOS local-network permission when needed.
 
 ### 🗒️ Markdown Notes & PDF
 
@@ -555,17 +547,17 @@ The Pro Edition ships new work almost every day. This section is a transparent l
 
 ---
 
-## 💎 Pro Edition — Sponsor to Unlock
+## 💎 Pioneer Edition — Sponsor to Unlock
 
 > ⚠️ **Limited-Time Launch Pricing — ends soon!**
 
-The **Pro Edition** unlocks everything beyond the Community Edition — SSH / Docker / Kubernetes pod triage, stress & automated testing, Markdown notes & file editor, PDF editor, and cloud document sharing via a self-hosted `verve-server`. It is obtained through a **sponsorship** model, and the entry price below is a **time-limited early-bird rate**.
+The **Pioneer Edition** unlocks everything beyond the Community Edition — Docker / Kubernetes pod triage, stress & automated testing, Markdown notes & file editor, PDF editor, and cloud document sharing via a self-hosted `verve-server`. It is obtained through a **sponsorship** model, and the entry price below is a **time-limited early-bird rate**.
 
 ### 🔥 Early-Bird Special — sponsor **¥99** (CNY)
 The current **¥99** early-bird price is a limited-time launch offer. **It will return to the regular ¥199 once the promotion ends.** Lock in the lowest price now:
 
-> **Sponsor ¥99+ today** to unlock the Pro Edition, including:
-> - ✅ All Pro capabilities (SSH / Docker / K8s pod triage / stress testing / automated testing / Markdown notes & editor / PDF editor / cloud document sharing)
+> **Sponsor ¥99+ today** to unlock the Pioneer Edition, including:
+> - ✅ All Pioneer capabilities (Docker / K8s pod triage / stress testing / automated testing / Markdown notes & editor / PDF editor / cloud document sharing)
 > - ✅ All official version updates (every future release, free)
 > - ✅ Priority technical support
 > - ✅ Early access to new features
@@ -586,10 +578,10 @@ The current **¥99** early-bird price is a limited-time launch offer. **It will 
   </tr>
 </table>
 
-> 📩 **How to get the Pro Edition:**
+> 📩 **How to get the Pioneer Edition:**
 > 1. **Sponsor** — scan the left QR code to open the WeChat official-account article and complete your sponsorship (¥99+).
 > 2. **Add me** — scan the right QR code to add my **personal WeChat** as a contact.
-> 3. Send a screenshot of your sponsorship, and I'll send you the latest Pro Edition download link and activation instructions.
+> 3. Send a screenshot of your sponsorship, and I'll send you the latest Pioneer Edition download link and activation instructions.
 
 ⏰ **Don't miss out — the price goes up after the launch window.**
 
@@ -606,7 +598,7 @@ Found a bug or have a feature request? Please [open an issue](../../issues/new).
 Verve is available in two editions under different licenses:
 
 - **Community Edition** — released under the **AGPL-3.0** open-source license. Source code is public; you may use, modify, and redistribute it under the terms of AGPL-3.0. Note that AGPL-3.0 is a strong copyleft license: derivative works must be released under AGPL-3.0, and **network use (offering the software as a service over a network) also triggers the source-disclosure obligation.**
-- **Pro Edition** — proprietary software under the **Verve Pro License**. Source code is **not open**. Without the author's written permission, the following are **prohibited**: reverse engineering / decompiling / disassembling; copying / modifying / redistributing the software or derivatives; using it for commercial resale or hosted services. The Pro Edition is obtained via sponsorship. For commercial licensing or team plans, contact the author via WeChat above.
+- **Pioneer Edition** — proprietary software under the **Verve Pioneer License**. Source code is **not open**. Without the author's written permission, the following are **prohibited**: reverse engineering / decompiling / disassembling; copying / modifying / redistributing the software or derivatives; using it for commercial resale or hosted services. The Pioneer Edition is obtained via sponsorship. For commercial licensing or team plans, contact the author via WeChat above.
 
 The full text of the AGPL-3.0 is in the [`LICENSE`](LICENSE) file at the repository root.
 
