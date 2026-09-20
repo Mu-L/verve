@@ -493,6 +493,7 @@ Verve 提供两个版本，使用同一个原生应用、同一套日常接口�
 
 > 最近更新：2026-09
 
+- **Windows 本地终端修复** —— 在新版 Windows 11 上本地终端的 cmd/PowerShell 静默无输出；Verve 现在内置自研 ConPTY 后端和 5 秒无输出 watchdog,应用日志落盘 `~/.verve/logs/verve.log`（Windows GUI 进程没有控制台）。
 - **MCP 服务器（`verve mcp`）** 🤖 —— 通过 Model Context Protocol 把工作区暴露给外部 AI 客户端（Claude Desktop、Cursor、Claude Code 等）：搜索/列出/打开接口、以结构化操作创建/更新/移动/删除接口与目录；每次写入都经 `workspace.json` 的备份-校验-回滚守卫，运行中的 GUI 通过文件监视热重载并弹通知。文档见 [docs/mcp.md](docs/mcp.md)。
 - **SSH / SFTP 终端正式开源** 🎉 —— 完整 SSH 模块并入社区版：主机卡片、多标签终端（完整 ANSI / xterm-256color、双击选词、滚动缓冲）、跳板机隧道、SFTP 文件浏览（含整目录递归上传）、终端内 Zmodem `rz`/`sz` 直传、一键本地端口转发、本地终端模式、TOFU `known_hosts` 校验、MFA / 2FA（`keyboard-interactive`）认证、OS 钥匙链 + AES-256-GCM / Argon2id 加密凭据保险库——对所有人免费，并修复断开重连。SSH 获得 ⌘2 侧栏快捷位。
 - **JSON 检索** —— JSON 格式化器中 ⌘/Ctrl+F 打开搜索栏，即时过滤/匹配 JSON 路径（限定键上下文，不与 Markdown 编辑器的查找冲突）。

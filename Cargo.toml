@@ -182,3 +182,19 @@ unused_imports = "allow"
 unused_variables = "allow"
 
 [dev-dependencies]
+
+# Win32 bindings for the Windows ConPTY backend (ssh/win_conpty.rs). Direct
+# dep so the feature set we need does not rely on feature unification from
+# other crates in the tree.
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = [
+    "consoleapi",
+    "wincontypes",
+    "wincon",
+    "processthreadsapi",
+    "processenv",
+    "winbase",
+    "winnt",
+    "handleapi",
+    "synchapi",
+] }

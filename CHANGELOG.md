@@ -2,6 +2,24 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.8.1] - 2026-09-20
+
+### 🐛 Fixes (synced from upstream)
+
+- **Windows local terminal silent on current Win11 builds** — portable-pty
+  0.9 spawns ConPTY clients with `STARTF_USESTDHANDLES` +
+  `INVALID_HANDLE_VALUE`, which leaves cmd/PowerShell alive but with zero
+  output on Windows 11 build 26200+. The local-terminal mode now uses a
+  purpose-built ConPTY backend (`ssh/win_conpty.rs`, modeled on the official
+  MS sample): `CreatePseudoConsole` with flags=0, no `STARTF_USESTDHANDLES`,
+  parent std handles cleared before spawn, and an explicit
+  `ClosePseudoConsole` when the child exits. Unix keeps portable-pty.
+- **Stall watchdog** — a 5s no-output watchdog now reports a diagnostic hint
+  in the SSH panel instead of an apparently-dead silent terminal.
+- **Logs persisted to `~/.verve/logs/verve.log`** — a Windows GUI process has
+  no console, so stderr diagnostics were simply lost; env_logger output is
+  now mirrored to a rotating log file (5 MB → verve.log.old).
+
 ## [0.8.0] - 2026-09-19
 
 > 🎉 **The SSH / SFTP terminal is now open-source** — the full SSH module
