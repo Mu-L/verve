@@ -2,6 +2,16 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.8.4] - 2026-09-21
+
+### 🐛 Fixes
+
+- **macOS build restored** — the CI installs `cargo-bundle` unpinned, and a
+  newly released cargo-bundle stopped accepting the (always-empty)
+  `exception_domain` bundle key that dated back to the initial commit; the
+  key is removed so both old and new cargo-bundle versions parse the bundle
+  config. No app-level changes since 0.8.2.
+
 ## [0.8.2] - 2026-09-21
 
 ### 🔧 Enhancements (synced from upstream)

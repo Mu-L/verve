@@ -27,7 +27,6 @@ native window."""
 # macOS bundle settings
 [package.metadata.bundle.osx]
 frameworks = []
-exception_domain = ""
 minimum_system_version = "11.0"
 # Use the dark mode-aware appearance.
 style = "dark"
