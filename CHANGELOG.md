@@ -2,6 +2,32 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.8.2] - 2026-09-21
+
+### 🔧 Enhancements (synced from upstream)
+
+- **Linux: system title bar removed, matching Windows** — a gpui patch
+  (`amosgeek/zed` fork, `verve-force-csd`: pinned rev + one commit) makes the
+  X11 client-side-decoration probe only require a compositor. deepin's kwin
+  and friends never list `_GTK_FRAME_EXTENTS` in `_NET_SUPPORTED`, which used
+  to downgrade `WindowDecorations::Client` to Server and stack the WM's own
+  "Verve" title bar on top of the app-drawn one. CSD works fine there (Motif
+  undecorated hint + app-drawn shadow/resize via `_NET_WM_MOVERESIZE`);
+  environments without a compositor still fall back to server decorations.
+  All four zed-source crates (gpui, gpui_platform, reqwest_client,
+  http_client) point at the same fork rev.
+
+### 🖥️ SSH improvements (synced from upstream)
+
+- **Keepalive + fast dead-connection detection** — a global keepalive every
+  15s with a 60s inactivity timeout surfaces network drops / host reboots /
+  VPN restarts promptly instead of hanging on TCP's multi-hour timeout.
+- **Auto-reconnect on abnormal disconnect** — a channel that drops without an
+  exit status (network loss / keepalive timeout) now shows
+  "✕ 连接已断开，正在尝试重连…" and reconnects, instead of leaving a dead
+  prompt that silently swallows keystrokes. A deliberate `exit` still closes
+  the tab as before.
+
 ## [0.8.1] - 2026-09-20
 
 ### 🐛 Fixes (synced from upstream)
