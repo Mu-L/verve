@@ -202,8 +202,11 @@ jobs:
       - name: Add cross-compile targets
         run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
 
+      # Pinned: 0.12.0 tightened the bundle-config schema (removed
+      # exception_domain/style) and unpinned installs broke the macOS job
+      # mid-release when it landed. Bump deliberately, not silently.
       - name: Install cargo-bundle
-        run: cargo install cargo-bundle
+        run: cargo install cargo-bundle@0.12.0
 
       - name: Cache cargo registry
         uses: actions/cache@v4

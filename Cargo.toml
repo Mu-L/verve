@@ -28,8 +28,6 @@ native window."""
 [package.metadata.bundle.osx]
 frameworks = []
 minimum_system_version = "11.0"
-# Use the dark mode-aware appearance.
-style = "dark"
 
 # Linux desktop entry metadata
 [package.metadata.deb]
