@@ -493,6 +493,7 @@ Verve 提供两个版本，使用同一个原生应用、同一套日常接口�
 
 > 最近更新：2026-09
 
+- **SSE 协议打磨** —— SSE 请求默认 POST 且方法可编辑（LLM chat/completions 风格），树/标签页/目录列表徽标显示「SSE」而非存储的 HTTP 方法，SSE 行不再误显示为 GET。
 - **Linux 标题栏对齐** —— gpui CSD 补丁移除 deepin/kwin 上 WM 自绘标题栏(客户端装饰只要求存在合成器),与 Windows 一致;附带 SSH keepalive(15s/60s)与异常断开自动重连。
 - **Windows 本地终端修复** —— 在新版 Windows 11 上本地终端的 cmd/PowerShell 静默无输出；Verve 现在内置自研 ConPTY 后端和 5 秒无输出 watchdog,应用日志落盘 `~/.verve/logs/verve.log`（Windows GUI 进程没有控制台）。
 - **MCP 服务器（`verve mcp`）** 🤖 —— 通过 Model Context Protocol 把工作区暴露给外部 AI 客户端（Claude Desktop、Cursor、Claude Code 等）：搜索/列出/打开接口、以结构化操作创建/更新/移动/删除接口与目录；每次写入都经 `workspace.json` 的备份-校验-回滚守卫，运行中的 GUI 通过文件监视热重载并弹通知。文档见 [docs/mcp.md](docs/mcp.md)。

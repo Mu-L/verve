@@ -2,6 +2,17 @@
 
 All notable changes to Verve will be documented in this file.
 
+## [0.8.6] - 2026-09-25
+
+### 🐛 Fixes (synced from upstream)
+
+- **SSE requests shown by protocol, sent with the right method** — SSE now
+  keeps the HTTP method selector visible (it runs over HTTP), and new SSE
+  requests default to **POST** (LLM chat/completions style). Tree, tab, and
+  folder-list badges label SSE requests as "SSE" (cyan) instead of their
+  stored method, so "GET" on an SSE row no longer reads as a bug; other
+  protocols keep the method badge. Legacy body-less SSE requests stay GET.
+
 ## [0.8.5] - 2026-09-21
 
 ### 🐛 Fixes

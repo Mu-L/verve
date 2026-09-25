@@ -476,6 +476,7 @@ The Community Edition keeps improving too. This is a transparent log of what has
 
 > Last updated: 2026-09
 
+- **SSE protocol polish** — SSE requests default to POST with an editable method (LLM chat/completions style) and badge as "SSE" in the tree/tabs/folder list, so a GET-labeled SSE row no longer looks like a bug.
 - **Linux title-bar parity** — a gpui CSD patch removes the WM's own title bar on deepin/kwin (client-side decorations now only require a compositor), matching Windows; plus SSH keepalive (15s/60s) with auto-reconnect on abnormal disconnects.
 - **Windows local-terminal fix** — cmd/PowerShell went silent (zero output) in the local terminal on current Windows 11 builds; Verve now ships its own ConPTY backend and a 5s stall watchdog, and app logs persist to `~/.verve/logs/verve.log` (a Windows GUI process has no console).
 - **MCP server (`verve mcp`)** 🤖 — expose the workspace to external AI clients (Claude Desktop, Cursor, Claude Code, …) over the Model Context Protocol: search/list/open requests and apply structured create/update/move/delete operations, with a backup-validate-rollback guard on `workspace.json` and live hot-reload (with notification) in the running GUI. See [docs/mcp.md](docs/mcp.md).
